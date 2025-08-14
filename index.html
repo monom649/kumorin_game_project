@@ -189,7 +189,7 @@
             position: absolute;
             top: 50px;
             right: 50px;
-            display: flex;
+            display: none; /* バナナアイコンを非表示 */
             flex-direction: column;
             align-items: flex-end;
             gap: 5px;
@@ -205,19 +205,19 @@
             top: 150px; /* 距離表示の下 */
             left: 50%;
             transform: translateX(-50%);
-            font-size: 32px; /* 距離表示96pxの約33% */
+            font-size: 48px; /* 32px × 1.5 = 48px */
             font-weight: bold;
             color: #ffff00;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 12px; /* 8px × 1.5 = 12px */
         }
 
         #speedGuide .banana-inline {
-            width: 38px; /* フォントサイズ32pxの約120% */
-            height: 38px;
+            width: 57px; /* 38px × 1.5 = 57px */
+            height: 57px;
             background-image: url('https://i.imgur.com/n4B27qz.jpg');
             background-size: contain;
             background-repeat: no-repeat;
@@ -365,7 +365,7 @@
                     <div id="bananaIcons"></div>
                 </div>
                 <div id="speedGuide">
-                    <div class="banana-inline"></div>を取るとスピードアップ！
+                    <div class="banana-inline"></div>でスピードアップ！
                 </div>
                 <div id="debugInfo">
                     <div>ジャイロ: <span id="gyroStatus">未取得</span></div>
@@ -784,7 +784,7 @@
                 if (speedGuide) {
                     speedGuide.style.color = '#ffff00';
                     speedGuide.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
-                    speedGuide.style.fontSize = '32px';
+                    speedGuide.style.fontSize = '48px';
                 }
                 
                 // ゲーム開始音とBGM
@@ -1118,7 +1118,7 @@
                 if (speedGuide) {
                     if (this.bananaCount === 0) {
                         // バナナ0個：ガイド表示
-                        speedGuide.innerHTML = '<div class="banana-inline"></div>を取るとスピードアップ！';
+                        speedGuide.innerHTML = '<div class="banana-inline"></div>でスピードアップ！';
                     } else if (this.bananaCount < 5) {
                         // バナナ1-4個：LV表示
                         speedGuide.innerHTML = `LV${this.bananaCount}`;
@@ -1127,18 +1127,6 @@
                         speedGuide.innerHTML = 'MAX';
                         speedGuide.style.color = '#ff0000'; // 赤色で強調
                         speedGuide.style.textShadow = '0 0 10px #ffff00'; // 光らせる
-                    }
-                }
-                
-                // バナナアイコン更新
-                const iconsContainer = document.getElementById('bananaIcons');
-                if (iconsContainer) {
-                    iconsContainer.innerHTML = '';
-                    
-                    for (let i = 0; i < this.bananaCount; i++) {
-                        const icon = document.createElement('div');
-                        icon.className = 'banana-icon';
-                        iconsContainer.appendChild(icon);
                     }
                 }
                 
@@ -1245,12 +1233,12 @@
                 // スピードアップエフェクトでスピードガイド表示を一時的に大きくする
                 const speedGuide = document.getElementById('speedGuide');
                 if (speedGuide) {
-                    speedGuide.style.fontSize = '48px'; /* 32px × 1.5 = 48px */
+                    speedGuide.style.fontSize = '72px'; /* 48px × 1.5 = 72px */
                     speedGuide.style.color = '#ff0000';
                     speedGuide.style.textShadow = '0 0 10px #ffff00';
                     
                     setTimeout(() => {
-                        speedGuide.style.fontSize = '32px';
+                        speedGuide.style.fontSize = '48px';
                         // MAXの場合は赤色を維持、そうでなければ黄色に戻す
                         if (this.bananaCount < 5) {
                             speedGuide.style.color = '#ffff00';
