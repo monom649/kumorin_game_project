@@ -1686,6 +1686,34 @@
                 document.getElementById('gyroPermissionScreen').style.display = 'none';
                 document.getElementById('titleScreen').style.display = 'flex';
                 this.gameState = 'title';
+                
+                // 導入シーンの要素とアニメーション状態をリセット
+                this.resetIntroScene();
+            }
+
+            resetIntroScene() {
+                // ソーダおじさんとくもりんの状態をリセット
+                const soda = document.getElementById('sodaOjisan');
+                const kumorin = document.getElementById('kumorinIntro');
+                const container = document.getElementById('gameContainer');
+                
+                if (soda) {
+                    soda.classList.remove('soda-entrance', 'soda-exit');
+                    console.log('ソーダおじさんアニメーションクラスをリセット');
+                }
+                
+                if (kumorin) {
+                    kumorin.classList.remove('kumorin-flyout');
+                    console.log('くもりんアニメーションクラスをリセット');
+                }
+                
+                if (container) {
+                    container.classList.remove('shake');
+                    console.log('画面揺れクラスをリセット');
+                }
+                
+                // 導入シーンを非表示に
+                document.getElementById('introScreen').style.display = 'none';
             }
             
             showGyroPermissionButton() {
