@@ -200,11 +200,29 @@
             gap: 10px;
         }
 
-        #speedMultiplier {
-            color: #ff6b00;
+        #speedGuide {
+            position: absolute;
+            top: 150px; /* 距離表示の下 */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px; /* 距離表示96pxの約33% */
             font-weight: bold;
-            font-size: 36px; /* 18px × 2.0 = 36px */
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            color: #ffff00;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        #speedGuide .banana-inline {
+            width: 38px; /* フォントサイズ32pxの約120% */
+            height: 38px;
+            background-image: url('https://i.imgur.com/n4B27qz.jpg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: inline-block;
         }
 
         #debugInfo {
@@ -344,8 +362,10 @@
             <div id="gameUI">
                 <div id="distanceDisplay">0m</div>
                 <div id="bananaCounter">
-                    <div id="speedMultiplier">×1.0</div>
                     <div id="bananaIcons"></div>
+                </div>
+                <div id="speedGuide">
+                    <div class="banana-inline"></div>を取るとスピードアップ！
                 </div>
                 <div id="debugInfo">
                     <div>ジャイロ: <span id="gyroStatus">未取得</span></div>
@@ -759,6 +779,14 @@
                 this.clouds = [];
                 this.bananas = [];
                 
+                // スピードガイドを初期状態に戻す
+                const speedGuide = document.getElementById('speedGuide');
+                if (speedGuide) {
+                    speedGuide.style.color = '#ffff00';
+                    speedGuide.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
+                    speedGuide.style.fontSize = '32px';
+                }
+                
                 // ゲーム開始音とBGM
                 this.playAudio('gamestart');
                 this.playAudio('bgm');
@@ -1085,10 +1113,21 @@
             }
 
             updateBananaCounter() {
-                // スピード倍率表示更新
-                const speedDisplay = document.getElementById('speedMultiplier');
-                if (speedDisplay) {
-                    speedDisplay.textContent = `×${this.speedMultiplier.toFixed(1)}`;
+                // スピードガイド表示更新
+                const speedGuide = document.getElementById('speedGuide');
+                if (speedGuide) {
+                    if (this.bananaCount === 0) {
+                        // バナナ0個：ガイド表示
+                        speedGuide.innerHTML = '<div class="banana-inline"></div>を取るとスピードアップ！';
+                    } else if (this.bananaCount < 5) {
+                        // バナナ1-4個：LV表示
+                        speedGuide.innerHTML = `LV${this.bananaCount}`;
+                    } else {
+                        // バナナ5個：MAX表示
+                        speedGuide.innerHTML = 'MAX';
+                        speedGuide.style.color = '#ff0000'; // 赤色で強調
+                        speedGuide.style.textShadow = '0 0 10px #ffff00'; // 光らせる
+                    }
                 }
                 
                 // バナナアイコン更新
@@ -1203,17 +1242,20 @@
             }
             
             showSpeedUpEffect() {
-                // スピードアップエフェクトでスピード倍率表示を一時的に大きくする
-                const speedDisplay = document.getElementById('speedMultiplier');
-                if (speedDisplay) {
-                    speedDisplay.style.fontSize = '56px'; /* 28px × 2.0 = 56px */
-                    speedDisplay.style.color = '#ff0000';
-                    speedDisplay.style.textShadow = '0 0 10px #ffff00';
+                // スピードアップエフェクトでスピードガイド表示を一時的に大きくする
+                const speedGuide = document.getElementById('speedGuide');
+                if (speedGuide) {
+                    speedGuide.style.fontSize = '48px'; /* 32px × 1.5 = 48px */
+                    speedGuide.style.color = '#ff0000';
+                    speedGuide.style.textShadow = '0 0 10px #ffff00';
                     
                     setTimeout(() => {
-                        speedDisplay.style.fontSize = '36px'; /* 18px × 2.0 = 36px */
-                        speedDisplay.style.color = '#ff6b00';
-                        speedDisplay.style.textShadow = '2px 2px 4px rgba(0,0,0,0.7)';
+                        speedGuide.style.fontSize = '32px';
+                        // MAXの場合は赤色を維持、そうでなければ黄色に戻す
+                        if (this.bananaCount < 5) {
+                            speedGuide.style.color = '#ffff00';
+                            speedGuide.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
+                        }
                     }, 1000);
                 }
             }
