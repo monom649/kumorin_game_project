@@ -125,11 +125,11 @@
 
         #sodaOjisan {
             position: absolute;
-            bottom: -1000px; /* 画面外から開始 */
+            bottom: -400px; /* 画面外から開始（40%サイズに合わせて調整） */
             left: 50%;
             transform: translateX(-50%);
-            width: 1000px; /* 2倍大きく */
-            height: 1000px;
+            width: 400px; /* 1000px × 40% = 400px */
+            height: 400px;
             background-image: url('https://i.imgur.com/4aHLhwq.png');
             background-size: contain;
             background-repeat: no-repeat;
@@ -156,8 +156,8 @@
         /* ゲーム中のくもりんGIF */
         #kumorinPlayer {
             position: absolute;
-            width: 300px;
-            height: 300px;
+            width: 120px; /* 300px × 40% = 120px */
+            height: 120px;
             background-image: url('https://i.imgur.com/0hQMgso.gif');
             background-size: contain;
             background-repeat: no-repeat;
@@ -267,9 +267,9 @@
         }
 
         #finalDistance {
-            font-size: 144px; /* 72px × 2.0 = 144px */
+            font-size: 48px; /* 適度なサイズに縮小 */
             font-weight: bold;
-            margin: 40px 0; /* 20px × 2.0 = 40px */
+            margin: 20px 0;
         }
 
         .button {
@@ -426,8 +426,8 @@
                 this.player = {
                     x: 0,
                     y: 0,
-                    width: 300,
-                    height: 300,
+                    width: 120, /* 300 × 40% = 120 */
+                    height: 120,
                     img: new Image(),
                     element: document.getElementById('kumorinPlayer')
                 };
@@ -516,7 +516,7 @@
                 
                 const speedGuide = document.getElementById('speedGuide');
                 if (speedGuide) {
-                    speedGuide.style.fontSize = '18px';  // 控えめなサイズ
+                    speedGuide.style.fontSize = '14px';  // さらに小さく
                 }
                 
                 // ジャイロ許可画面
