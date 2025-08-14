@@ -498,45 +498,93 @@
             }
 
             requestGyroPermission() {
-                // ジャイロセンサーが使用可能だったら
+                // まずユーザーに説明を表示
+                const userAgent = navigator.userAgent;
+                const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+                
+                if (isIOS) {
+                    // iOSの場合は必ず説明を表示
+                    const proceed = confirm('くもりんを操作するためにセンサーの許可が必要です。\n\n次の画面で「許可」を選択してください。\n\n許可しない場合はタップ操作になります。');
+                    
+                    if (!proceed) {
+                        // キャンセルされた場合はタッチ操作
+                        this.setupTouchControls();
+                        this.startIntro();
+                        return;
+                    }
+                }
+                
+                // ジャイロセンサーが使用可能かチェック
                 if (window.DeviceOrientationEvent) {
                     console.log('DeviceOrientationEvent対応デバイス検出');
                     
-                    // ユーザーにアクセスの許可を求める関数があったら（iOS13以降の対応）
-                    if (DeviceOrientationEvent.requestPermission) {
-                        console.log('iOS 13+ 検出 - 許可要求が必要');
+                    // iOS13以降の許可システム
+                    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                        console.log('iOS 13+ 検出 - 許可要求実行');
                         
-                        // ジャイロセンサーへのアクセス許可を申請する
-                        DeviceOrientationEvent.requestPermission().then((response) => {
-                            console.log('許可結果:', response);
-                            // リクエストが許可されたら
-                            if (response === "granted") {
-                                console.log('ジャイロセンサー許可取得成功');
-                                this.setupGyro();
-                                this.startIntro();
-                            } else {
-                                console.log('ジャイロセンサー許可拒否');
-                                alert('ジャイロセンサーの許可が必要です。タップ操作でプレイできます。');
-                                this.setupTouchControls();
-                                this.startIntro();
-                            }
-                        }).catch((error) => {
-                            console.error('許可取得エラー:', error);
-                            this.setupTouchControls();
-                            this.startIntro();
-                        });
+                        // 複数回試行するシステム
+                        this.requestPermissionWithRetry();
                         
                     } else {
-                        // アクセスの許可を求める関数がなかったら（Android等）
+                        // Android または古いiOS
                         console.log('Android または古いiOS検出');
                         this.setupGyro();
                         this.startIntro();
                     }
                 } else {
                     console.log('ジャイロセンサー非対応デバイス');
-                    alert('このデバイスはジャイロセンサーに対応していません。タップ操作でプレイできます。');
+                    alert('このデバイスはジャイロセンサーに対応していません。タップ操作でプレイします。');
                     this.setupTouchControls();
                     this.startIntro();
+                }
+            }
+            
+            async requestPermissionWithRetry(attempt = 1) {
+                const maxAttempts = 3;
+                
+                try {
+                    console.log(`ジャイロセンサー許可要求試行 ${attempt}/${maxAttempts}`);
+                    
+                    const response = await DeviceOrientationEvent.requestPermission();
+                    console.log('許可結果:', response);
+                    
+                    if (response === 'granted') {
+                        console.log('ジャイロセンサー許可取得成功');
+                        this.setupGyro();
+                        this.startIntro();
+                    } else if (response === 'denied') {
+                        console.log('ジャイロセンサー許可拒否');
+                        alert('センサーが拒否されました。タップ操作でプレイします。\n\n※センサー操作を使いたい場合は、Safari設定 > プライバシーとセキュリティ > モーションと画面の向き から許可してください。');
+                        this.setupTouchControls();
+                        this.startIntro();
+                    } else {
+                        // 'default' または不明な応答
+                        if (attempt < maxAttempts) {
+                            console.log('許可応答が不明確、再試行します...');
+                            setTimeout(() => {
+                                this.requestPermissionWithRetry(attempt + 1);
+                            }, 1000);
+                        } else {
+                            console.log('最大試行回数に達しました。タッチ操作に切り替えます。');
+                            alert('センサー許可の取得に失敗しました。タップ操作でプレイします。');
+                            this.setupTouchControls();
+                            this.startIntro();
+                        }
+                    }
+                } catch (error) {
+                    console.error(`許可取得エラー (試行${attempt}):`, error);
+                    
+                    if (attempt < maxAttempts) {
+                        console.log('エラーのため再試行します...');
+                        setTimeout(() => {
+                            this.requestPermissionWithRetry(attempt + 1);
+                        }, 1000);
+                    } else {
+                        console.log('最大試行回数に達しました。タッチ操作に切り替えます。');
+                        alert('センサー許可の取得でエラーが発生しました。タップ操作でプレイします。');
+                        this.setupTouchControls();
+                        this.startIntro();
+                    }
                 }
             }
 
