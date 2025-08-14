@@ -82,7 +82,7 @@
             font-size: 24px;
             font-family: monospace;
             z-index: 2000;
-            display: block;
+            display: none;
             max-width: 500px;
             pointer-events: none;
         }
@@ -352,7 +352,6 @@
         <div id="titleScreen">
             <div id="kumorinGif"></div>
             <button id="startButton">スタート</button>
-            <button id="audioTestButton" style="margin-top: 20px; padding: 20px 40px; font-size: 32px; background: #28a745; color: white; border: none; border-radius: 10px;">🎵 音声テスト</button>
         </div>
 
         <!-- 導入演出画面 -->
@@ -513,11 +512,6 @@
                     this.showTitleScreen();
                 });
 
-                // 音声テストボタン
-                document.getElementById('audioTestButton').addEventListener('click', async () => {
-                    await this.unlockAudio();
-                    this.testAudio();
-                });
 
                 // 固定サイズなのでリサイズイベントは不要
             }
@@ -883,9 +877,6 @@
             startIntro() {
                 document.getElementById('titleScreen').style.display = 'none';
                 document.getElementById('introScreen').style.display = 'block';
-                
-                // 音声テストボタンを隠す
-                document.getElementById('audioTestButton').style.display = 'none';
                 
                 // ジャイロキャリブレーション開始のメッセージ
                 if (!this.touchControls && !this.isCalibrated) {
@@ -1523,7 +1514,6 @@
                 document.getElementById('gameScreen').style.display = 'none';
                 document.getElementById('gameOverScreen').style.display = 'none';
                 document.getElementById('titleScreen').style.display = 'flex';
-                document.getElementById('audioTestButton').style.display = 'block';
                 this.gameState = 'title';
             }
             
@@ -1553,29 +1543,6 @@
                 }
             }
             
-            testAudio() {
-                this.showAudioMessage('🎵 音声テスト開始');
-                
-                // 各音声を順番にテスト
-                const audioNames = ['item', 'out', 'gameover'];
-                let index = 0;
-                
-                const testNext = () => {
-                    if (index < audioNames.length) {
-                        const audioName = audioNames[index];
-                        this.showAudioMessage(`🎵 テスト中: ${audioName}`);
-                        this.playAudio(audioName);
-                        index++;
-                        setTimeout(testNext, 2000); // 2秒間隔
-                    } else {
-                        setTimeout(() => {
-                            this.showAudioMessage('🎵 テスト完了');
-                        }, 1000);
-                    }
-                };
-                
-                setTimeout(testNext, 1000);
-            }
             
             showSpeedUpEffect() {
                 // スピードアップエフェクトでスピードガイド表示を一時的に大きくする
