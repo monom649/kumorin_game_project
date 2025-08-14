@@ -336,6 +336,24 @@
             <button id="startButton">スタート</button>
         </div>
 
+        <!-- ジャイロ許可画面 -->
+        <div id="gyroPermissionScreen" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white; font-size: 48px;">
+            <div style="margin-bottom: 60px;">
+                🎮 くもりんを操作するために<br>
+                センサーの許可が必要です
+            </div>
+            <div style="margin-bottom: 60px; font-size: 36px; color: #ffff00;">
+                📱 次の画面で「許可」を<br>
+                選択してください
+            </div>
+            <button id="gyroPermissionButton" style="padding: 30px 60px; font-size: 40px; background: #ff6b00; color: white; border: none; border-radius: 20px; cursor: pointer; font-family: 'Panda Bakery', Arial, sans-serif;">
+                センサー許可を要求
+            </button>
+            <button id="gyroSkipButton" style="margin-top: 30px; padding: 20px 40px; font-size: 32px; background: #666; color: white; border: none; border-radius: 15px; cursor: pointer; font-family: 'Panda Bakery', Arial, sans-serif;">
+                タップ操作でプレイ
+            </button>
+        </div>
+
         <!-- 導入演出画面 -->
         <div id="introScreen">
             <div id="kumorinIntro"></div>
@@ -495,6 +513,20 @@
                 });
 
 
+                // ジャイロ許可ボタン
+                document.getElementById('gyroPermissionButton').addEventListener('click', async () => {
+                    console.log('🖱️ ジャイロ許可ボタンがクリックされました（ユーザージェスチャー）');
+                    await this.handleGyroPermissionClick();
+                });
+
+                // ジャイロスキップボタン
+                document.getElementById('gyroSkipButton').addEventListener('click', () => {
+                    console.log('🖱️ ジャイロスキップボタンがクリックされました');
+                    this.hideGyroPermissionScreen();
+                    this.setupTouchControls();
+                    this.startIntro();
+                });
+
                 // 固定サイズなのでリサイズイベントは不要
             }
 
@@ -521,17 +553,9 @@
                 });
                 
                 if (isIOS) {
-                    // iOSの場合は必ず説明を表示
-                    const proceed = confirm('🎮 くもりんを操作するためにセンサーの許可が必要です。\n\n📱 次の画面で「許可」を選択してください。\n\n❌ 許可しない場合はタップ操作になります。');
-                    
-                    if (!proceed) {
-                        // キャンセルされた場合はタッチ操作
-                        console.log('👤 ユーザーが事前説明をキャンセル');
-                        this.setupTouchControls();
-                        this.startIntro();
-                        return;
-                    }
-                    console.log('👤 ユーザーが事前説明を了承');
+                    // iOSの場合は専用ボタンを表示してユーザージェスチャーを確保
+                    this.showGyroPermissionButton();
+                    return;
                 }
                 
                 // ジャイロセンサーが使用可能かチェック
@@ -567,82 +591,6 @@
                 }
             }
             
-            async requestPermissionWithRetry(attempt = 1) {
-                const maxAttempts = 2; // 試行回数を減らしてシンプルに
-                
-                try {
-                    console.log(`ジャイロセンサー許可要求試行 ${attempt}/${maxAttempts}`);
-                    console.log('DeviceOrientationEvent:', typeof DeviceOrientationEvent);
-                    console.log('requestPermission function:', typeof DeviceOrientationEvent.requestPermission);
-                    
-                    // より安全な方法で許可を要求
-                    if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
-                        console.error('requestPermission関数が見つかりません');
-                        alert('このデバイスではセンサー許可が利用できません。タップ操作でプレイします。');
-                        this.setupTouchControls();
-                        this.startIntro();
-                        return;
-                    }
-                    
-                    // ユーザーに許可ダイアログが表示されることを通知
-                    console.log('許可ダイアログを表示します...');
-                    
-                    const response = await DeviceOrientationEvent.requestPermission();
-                    console.log('許可結果:', response, typeof response);
-                    
-                    if (response === 'granted') {
-                        console.log('✅ ジャイロセンサー許可取得成功');
-                        alert('センサー許可が取得できました！ジャイロセンサーでプレイできます。');
-                        this.setupGyro();
-                        this.startIntro();
-                    } else if (response === 'denied') {
-                        console.log('❌ ジャイロセンサー許可拒否');
-                        alert('センサーが拒否されました。タップ操作でプレイします。\n\n※センサー操作を使いたい場合は、Safari設定 > プライバシーとセキュリティ > モーションと画面の向き から許可してください。');
-                        this.setupTouchControls();
-                        this.startIntro();
-                    } else {
-                        // 'default' または不明な応答 - iOSでは通常起こらないが念のため
-                        console.log('⚠️ 不明な許可応答:', response);
-                        alert(`不明な応答: ${response}\n\nタップ操作でプレイします。`);
-                        this.setupTouchControls();
-                        this.startIntro();
-                    }
-                } catch (error) {
-                    console.error(`❌ 許可取得エラー (試行${attempt}):`, error);
-                    console.error('エラー詳細:', {
-                        name: error.name,
-                        message: error.message,
-                        stack: error.stack
-                    });
-                    
-                    // エラーの詳細をユーザーにも表示
-                    const errorInfo = `エラー: ${error.name}\nメッセージ: ${error.message}`;
-                    
-                    // 特定のエラータイプに応じた処理
-                    if (error.name === 'NotAllowedError') {
-                        console.log('🚫 NotAllowedError: ユーザーがセンサー許可を拒否');
-                        alert('センサー許可が拒否されました。タップ操作でプレイします。\n\n' + errorInfo);
-                        this.setupTouchControls();
-                        this.startIntro();
-                    } else if (error.name === 'NotSupportedError') {
-                        console.log('🚫 NotSupportedError: サポート非対応');
-                        alert('このデバイスではセンサーがサポートされていません。タップ操作でプレイします。\n\n' + errorInfo);
-                        this.setupTouchControls();
-                        this.startIntro();
-                    } else if (error.name === 'InvalidStateError') {
-                        console.log('🚫 InvalidStateError: 無効な状態');
-                        alert('センサーが無効な状態です。タップ操作でプレイします。\n\n' + errorInfo);
-                        this.setupTouchControls();
-                        this.startIntro();
-                    } else {
-                        // その他のエラー - 再試行しない、即座にタッチ操作に切り替え
-                        console.log('🚫 その他のエラー:', error.name);
-                        alert(`センサー許可でエラーが発生しました。タップ操作でプレイします。\n\n${errorInfo}`);
-                        this.setupTouchControls();
-                        this.startIntro();
-                    }
-                }
-            }
 
             setupGyro() {
                 console.log('ジャイロセンサー設定開始');
@@ -1586,8 +1534,58 @@
             showTitleScreen() {
                 document.getElementById('gameScreen').style.display = 'none';
                 document.getElementById('gameOverScreen').style.display = 'none';
+                document.getElementById('gyroPermissionScreen').style.display = 'none';
                 document.getElementById('titleScreen').style.display = 'flex';
                 this.gameState = 'title';
+            }
+            
+            showGyroPermissionButton() {
+                console.log('🎯 ジャイロ許可画面を表示');
+                document.getElementById('titleScreen').style.display = 'none';
+                document.getElementById('gyroPermissionScreen').style.display = 'flex';
+            }
+            
+            hideGyroPermissionScreen() {
+                console.log('🎯 ジャイロ許可画面を非表示');
+                document.getElementById('gyroPermissionScreen').style.display = 'none';
+            }
+            
+            async handleGyroPermissionClick() {
+                console.log('🎯 ユーザージェスチャー内で許可要求を開始');
+                
+                // ジャイロセンサーが使用可能かチェック
+                if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    try {
+                        console.log('📱 DeviceOrientationEvent.requestPermission() 実行中...');
+                        const response = await DeviceOrientationEvent.requestPermission();
+                        console.log('✅ 許可結果:', response);
+                        
+                        if (response === 'granted') {
+                            console.log('🎉 ジャイロセンサー許可取得成功');
+                            this.hideGyroPermissionScreen();
+                            this.setupGyro();
+                            this.startIntro();
+                        } else {
+                            console.log('❌ ジャイロセンサー許可拒否:', response);
+                            alert(`センサー許可が拒否されました: ${response}\n\nタップ操作でプレイします。`);
+                            this.hideGyroPermissionScreen();
+                            this.setupTouchControls();
+                            this.startIntro();
+                        }
+                    } catch (error) {
+                        console.error('❌ ジャイロセンサー許可エラー:', error);
+                        alert(`センサー許可エラー: ${error.name}\n${error.message}\n\nタップ操作でプレイします。`);
+                        this.hideGyroPermissionScreen();
+                        this.setupTouchControls();
+                        this.startIntro();
+                    }
+                } else {
+                    console.log('⚠️ DeviceOrientationEvent.requestPermission が利用できません');
+                    alert('このデバイスではセンサー許可が利用できません。\nタップ操作でプレイします。');
+                    this.hideGyroPermissionScreen();
+                    this.setupTouchControls();
+                    this.startIntro();
+                }
             }
             
             updateAudioDebug() {
