@@ -32,7 +32,7 @@
             align-items: center;
         }
 
-        /* ゲームコンテナ: 1920×1080比率を維持してスケール */
+        /* ゲームコンテナ: 縦1920×横1080の縦向きゲーム */
         .game-container {
             width: 1080px;
             height: 1920px;
@@ -459,26 +459,36 @@
 
             setupScreenScale() {
                 const container = document.getElementById('gameContainer');
-                const targetWidth = 1080;
-                const targetHeight = 1920;
-                const targetRatio = targetWidth / targetHeight;
+                const targetWidth = 1080;  // ゲームの横幅
+                const targetHeight = 1920; // ゲームの縦幅
                 
                 const updateScale = () => {
                     const screenWidth = window.innerWidth;
                     const screenHeight = window.innerHeight;
-                    const screenRatio = screenWidth / screenHeight;
                     
-                    // スケールを幅と高さの両方で計算して、小さい方を採用（画面に収まるように）
-                    const scaleByWidth = screenWidth / targetWidth;   // 幅ベース
-                    const scaleByHeight = screenHeight / targetHeight; // 高さベース
-                    const scale = Math.min(scaleByWidth, scaleByHeight); // 小さい方を採用
+                    // 縦向きゲーム用のスケーリング：画面いっぱいに表示
+                    let scale;
                     
-                    // スケールを適用（bodyのflexboxでセンタリングされるので translate不要）
+                    // 横幅基準でスケールを計算（画面の横幅いっぱいに表示）
+                    scale = screenWidth / targetWidth;
+                    
+                    // ただし、高さが画面からはみ出る場合は高さ基準に変更
+                    const scaledHeight = targetHeight * scale;
+                    if (scaledHeight > screenHeight) {
+                        scale = screenHeight / targetHeight;
+                    }
+                    
+                    // スケールを適用
                     container.style.transform = `scale(${scale})`;
                     
+                    const finalWidth = targetWidth * scale;
+                    const finalHeight = targetHeight * scale;
+                    
                     console.log(`📱 Screen: ${screenWidth}x${screenHeight}`);
-                    console.log(`📏 Scale候補: 幅=${scaleByWidth.toFixed(3)}, 高さ=${scaleByHeight.toFixed(3)}`);
-                    console.log(`✅ 採用Scale: ${scale.toFixed(3)}, 表示サイズ: ${(targetWidth * scale).toFixed(0)}x${(targetHeight * scale).toFixed(0)}`);
+                    console.log(`🎮 Game Target: ${targetWidth}x${targetHeight}`);
+                    console.log(`✅ Scale: ${scale.toFixed(3)}`);
+                    console.log(`📏 Final Size: ${finalWidth.toFixed(0)}x${finalHeight.toFixed(0)}`);
+                    console.log(`📊 Coverage: 横${(finalWidth/screenWidth*100).toFixed(1)}% 縦${(finalHeight/screenHeight*100).toFixed(1)}%`);
                 };
                 
                 updateScale();
