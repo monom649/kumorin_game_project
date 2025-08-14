@@ -226,8 +226,8 @@
         }
 
         #speedGuide .banana-inline {
-            width: 57px; /* 38px × 1.5 = 57px */
-            height: 57px;
+            width: 39px; /* 正しいアスペクト比を保持 */
+            height: 24px; /* 1041:642 ≈ 1.62:1 */
             background-image: url('https://i.imgur.com/n4B27qz.jpg');
             background-size: contain;
             background-repeat: no-repeat;
@@ -250,8 +250,8 @@
 
 
         .banana-icon {
-            width: 80px; /* 40px × 2.0 = 80px */
-            height: 80px; /* 40px × 2.0 = 80px */
+            width: 52px; /* 正しいアスペクト比を保持 */
+            height: 32px; /* 1041:642 ≈ 1.62:1 */
             background-image: url('https://i.imgur.com/n4B27qz.jpg');
             background-size: contain;
             background-repeat: no-repeat;
@@ -594,14 +594,14 @@
                 // バナナアイコン
                 const bananaIcons = document.querySelectorAll('.banana-icon');
                 bananaIcons.forEach(icon => {
-                    icon.style.width = '32px';
-                    icon.style.height = '32px';
+                    icon.style.width = '52px';  // 正しいアスペクト比
+                    icon.style.height = '32px'; // 1041:642 ≈ 1.62:1
                 });
                 
                 const bananaInlines = document.querySelectorAll('.banana-inline');
                 bananaInlines.forEach(icon => {
-                    icon.style.width = '24px';
-                    icon.style.height = '24px';
+                    icon.style.width = '39px';  // 正しいアスペクト比
+                    icon.style.height = '24px'; // 1041:642 ≈ 1.62:1
                 });
             }
 
@@ -1383,8 +1383,8 @@
                     this.bananas.push({
                         x: Math.random() * (1080 - 210), // 1080 - 210 = 870（30%縮小後のサイズ）
                         y: -300,
-                        width: 210, // 300 × 0.7 = 210（30%縮小）
-                        height: 210, // 300 × 0.7 = 210（30%縮小）
+                        width: 210, // 適度なサイズ
+                        height: 130, // 正しいアスペクト比 1041:642 ≈ 1.62:1
                         speed: 3 * this.speedMultiplier
                     });
                 }
