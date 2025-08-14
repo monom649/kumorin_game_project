@@ -218,6 +218,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
+        // レスポンシブ対応
         function resizeCanvas() {
             const container = document.getElementById('gameContainer');
             const rect = container.getBoundingClientRect();
@@ -239,10 +240,10 @@
             constructor() {
                 this.gameState = 'intro';
                 this.distance = 0;
-                this.speed = 15;
+                this.speed = 15; // 基本スピードを15に設定
                 this.bananaCount = 0;
                 this.speedMultiplier = 1.0;
-                this.speedLevels = [1.0, 1.4, 1.8, 2.2, 2.6, 3.0];
+                this.speedLevels = [1.0, 1.4, 1.8, 2.2, 2.6, 3.0]; // スピードレベル配列
                 
                 this.player = {
                     x: 200,
@@ -262,6 +263,7 @@
                 this.bananaTimer = 0;
                 this.birdTimer = 0;
                 
+                // ジャイロスコープ用
                 this.gamma = 0;
                 this.beta = 0;
                 this.hasMotionPermission = false;
@@ -271,6 +273,7 @@
             }
             
             initIntroAnimations() {
+                // イントロアニメーション用のオブジェクト
                 this.introAnimations = [
                     { type: 'kumorin', x: 50, y: 200, size: 60, bounce: 0 },
                     { type: 'banana', x: 150, y: 300, rotation: 0 },
@@ -338,6 +341,7 @@
                 let shouldMoveUp = false;
                 let shouldMoveDown = false;
                 
+                // 4方向移動：ジャイロスコープまたはキーボード
                 if (this.hasMotionPermission) {
                     if (this.gamma < -15) shouldMoveLeft = true;
                     else if (this.gamma > 15) shouldMoveRight = true;
@@ -345,6 +349,7 @@
                     else if (this.beta > 15) shouldMoveDown = true;
                 }
                 
+                // キーボード入力（デバッグ用）
                 if (this.keys) {
                     if (this.keys['ArrowLeft'] || this.keys['a']) shouldMoveLeft = true;
                     if (this.keys['ArrowRight'] || this.keys['d']) shouldMoveRight = true;
@@ -352,6 +357,7 @@
                     if (this.keys['ArrowDown'] || this.keys['s']) shouldMoveDown = true;
                 }
                 
+                // 移動処理
                 if (shouldMoveLeft && this.player.x > 0) {
                     this.player.x -= moveSpeed;
                 }
@@ -365,13 +371,17 @@
                     this.player.y += moveSpeed;
                 }
                 
+                // 画面端での制限
                 this.player.x = Math.max(0, Math.min(canvas.width - this.player.width, this.player.x));
                 this.player.y = Math.max(0, Math.min(canvas.height - this.player.height, this.player.y));
             }
             
             updateSpeedSystem() {
+                // バナナ数に基づくスピード倍率
                 const levelIndex = Math.min(this.bananaCount, this.speedLevels.length - 1);
                 this.speedMultiplier = this.speedLevels[levelIndex];
+                
+                // UI更新
                 document.getElementById('speed').textContent = this.speedMultiplier.toFixed(1);
             }
             
@@ -382,6 +392,7 @@
                 this.updatePlayerMovement();
                 this.updateSpeedSystem();
                 
+                // 雲の生成と更新
                 this.cloudTimer += deltaTime;
                 if (this.cloudTimer > 800) {
                     this.clouds.push({
@@ -399,6 +410,7 @@
                 });
                 this.clouds = this.clouds.filter(cloud => cloud.y < canvas.height + 100);
                 
+                // バナナの生成と更新
                 this.bananaTimer += deltaTime;
                 if (this.bananaTimer > 1500) {
                     this.bananas.push({
@@ -416,9 +428,11 @@
                 });
                 this.bananas = this.bananas.filter(banana => banana.y < canvas.height + 50);
                 
+                // 鳥の生成と更新（安全なスポーン位置）
                 this.birdTimer += deltaTime;
                 const birdSpawnRate = Math.max(2000 - this.distance * 0.5, 800);
                 if (this.birdTimer > birdSpawnRate) {
+                    // プレイヤーから離れた位置にスポーン
                     let birdX;
                     do {
                         birdX = Math.random() * (canvas.width - 50);
@@ -441,13 +455,16 @@
                 });
                 this.birds = this.birds.filter(bird => bird.y < canvas.height + 100);
                 
+                // 衝突判定
                 this.checkCollisions();
                 
+                // UI更新
                 document.getElementById('distance').textContent = Math.floor(this.distance);
                 document.getElementById('bananas').textContent = this.bananaCount;
             }
             
             checkCollisions() {
+                // バナナとの衝突
                 this.bananas.forEach((banana, index) => {
                     if (this.isColliding(this.player, banana)) {
                         this.bananas.splice(index, 1);
@@ -455,6 +472,7 @@
                     }
                 });
                 
+                // 鳥との衝突
                 this.birds.forEach(bird => {
                     if (this.isColliding(this.player, bird, 10)) {
                         this.gameOver();
@@ -480,12 +498,14 @@
             renderIntro() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
+                // 背景グラデーション
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 gradient.addColorStop(0, '#87CEEB');
                 gradient.addColorStop(1, '#98FB98');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
+                // イントロアニメーション
                 this.introAnimations.forEach(anim => {
                     if (anim.type === 'kumorin') {
                         anim.bounce += 0.1;
@@ -513,26 +533,32 @@
                 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
+                // 背景
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 gradient.addColorStop(0, '#87CEEB');
                 gradient.addColorStop(1, '#98FB98');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
+                // 雲を描画
                 this.clouds.forEach(cloud => {
                     this.drawCloud(cloud.x, cloud.y, cloud.width, cloud.height);
                 });
                 
+                // バナナを描画
                 this.bananas.forEach(banana => {
                     this.drawBanana(banana.x, banana.y, banana.width);
                 });
                 
+                // 鳥を描画
                 this.birds.forEach(bird => {
                     this.drawBird(bird.x, bird.y, bird.width, bird.height, Date.now() * 0.01, bird.direction);
                 });
                 
+                // プレイヤー（くもりん）を描画
                 this.drawKumorin(this.player.x, this.player.y, this.player.width);
                 
+                // スピードブースト表示
                 if (this.speedMultiplier > 1.0) {
                     ctx.save();
                     ctx.globalAlpha = 0.7;
@@ -545,16 +571,20 @@
             drawKumorin(x, y, size) {
                 ctx.save();
                 
+                // 影
                 ctx.fillStyle = 'rgba(0,0,0,0.2)';
                 ctx.fillRect(x + 2, y + size + 2, size, 8);
                 
+                // メインボディ
                 ctx.fillStyle = '#FFD700';
                 ctx.fillRect(x, y, size, size);
                 
+                // 顔
                 ctx.fillStyle = '#FF6347';
                 ctx.fillRect(x + size * 0.1, y + size * 0.2, size * 0.2, size * 0.2);
                 ctx.fillRect(x + size * 0.7, y + size * 0.2, size * 0.2, size * 0.2);
                 
+                // 口
                 ctx.fillStyle = '#8B4513';
                 ctx.fillRect(x + size * 0.3, y + size * 0.6, size * 0.4, size * 0.1);
                 
@@ -565,6 +595,7 @@
                 ctx.save();
                 ctx.fillStyle = 'rgba(255,255,255,0.8)';
                 
+                // 雲の形を複数の円で描画
                 ctx.beginPath();
                 ctx.arc(x + width * 0.2, y + height * 0.5, height * 0.4, 0, Math.PI * 2);
                 ctx.arc(x + width * 0.5, y + height * 0.3, height * 0.5, 0, Math.PI * 2);
@@ -579,11 +610,13 @@
                 ctx.translate(x + size/2, y + size/2);
                 ctx.rotate(rotation);
                 
+                // バナナの形
                 ctx.fillStyle = '#FFD700';
                 ctx.beginPath();
                 ctx.ellipse(0, 0, size * 0.4, size * 0.8, 0.3, 0, Math.PI * 2);
                 ctx.fill();
                 
+                // バナナの筋
                 ctx.strokeStyle = '#FFA500';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -606,11 +639,14 @@
                     x = -x - width;
                 }
                 
+                // 鳥の体
                 ctx.fillStyle = '#8B4513';
                 ctx.fillRect(x + width * 0.3, y + height * 0.4, width * 0.4, height * 0.3);
                 
+                // 翼の動き
                 const wingFlap = Math.sin(animFrame) * 0.3;
                 
+                // 左翼
                 ctx.fillStyle = '#A0522D';
                 ctx.save();
                 ctx.translate(x + width * 0.2, y + height * 0.5);
@@ -618,12 +654,14 @@
                 ctx.fillRect(-width * 0.2, -height * 0.1, width * 0.3, height * 0.2);
                 ctx.restore();
                 
+                // 右翼
                 ctx.save();
                 ctx.translate(x + width * 0.8, y + height * 0.5);
                 ctx.rotate(-wingFlap);
                 ctx.fillRect(0, -height * 0.1, width * 0.3, height * 0.2);
                 ctx.restore();
                 
+                // くちばし
                 ctx.fillStyle = '#FFA500';
                 ctx.fillRect(x + width * 0.1, y + height * 0.45, width * 0.2, height * 0.1);
                 
@@ -633,19 +671,24 @@
             drawSodaOjisan(x, y, size) {
                 ctx.save();
                 
+                // ソーダおじさんの体
                 ctx.fillStyle = '#4169E1';
                 ctx.fillRect(x, y, size, size * 1.2);
                 
+                // 顔
                 ctx.fillStyle = '#FFDBAC';
                 ctx.fillRect(x + size * 0.1, y - size * 0.3, size * 0.8, size * 0.6);
                 
+                // 目
                 ctx.fillStyle = '#000';
                 ctx.fillRect(x + size * 0.2, y - size * 0.1, size * 0.1, size * 0.1);
                 ctx.fillRect(x + size * 0.7, y - size * 0.1, size * 0.1, size * 0.1);
                 
+                // 口
                 ctx.fillStyle = '#FF0000';
                 ctx.fillRect(x + size * 0.3, y + size * 0.1, size * 0.4, size * 0.05);
                 
+                // ソーダボトル
                 ctx.fillStyle = '#00CED1';
                 ctx.fillRect(x + size * 0.3, y - size * 0.8, size * 0.4, size * 0.6);
                 
@@ -668,6 +711,7 @@
             }
         }
         
+        // キーボード入力（デバッグ用）
         const keys = {};
         window.addEventListener('keydown', (e) => {
             keys[e.key] = true;
@@ -676,6 +720,7 @@
             keys[e.key] = false;
         });
         
+        // ゲームインスタンス
         let game;
         
         function startGame() {
@@ -692,14 +737,17 @@
             }
         }
         
+        // イントロアニメーション開始
         function initIntro() {
             game = new Game();
             game.keys = keys;
             game.loop();
         }
         
+        // ページ読み込み時にイントロ開始
         window.addEventListener('load', initIntro);
         
+        // タッチ対応
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
         });
