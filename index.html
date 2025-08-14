@@ -72,7 +72,7 @@
 
         /* 音声デバッグ表示 */
         #audioDebug {
-            position: absolute;
+            position: fixed;
             top: 20px;
             left: 20px;
             background: rgba(0,0,0,0.8);
@@ -81,9 +81,10 @@
             border-radius: 5px;
             font-size: 24px;
             font-family: monospace;
-            z-index: 1000;
-            display: none;
+            z-index: 2000;
+            display: block;
             max-width: 500px;
+            pointer-events: none;
         }
 
         #kumorinGif {
@@ -773,6 +774,9 @@
                 document.getElementById('titleScreen').style.display = 'none';
                 document.getElementById('introScreen').style.display = 'block';
                 
+                // 音声テストボタンを隠す
+                document.getElementById('audioTestButton').style.display = 'none';
+                
                 // ジャイロキャリブレーション開始のメッセージ
                 if (!this.touchControls && !this.isCalibrated) {
                     console.log('📱 ジャイロセンサーキャリブレーション開始: スマートフォンを自然な角度で持ってください（3秒間）');
@@ -1409,6 +1413,7 @@
                 document.getElementById('gameScreen').style.display = 'none';
                 document.getElementById('gameOverScreen').style.display = 'none';
                 document.getElementById('titleScreen').style.display = 'flex';
+                document.getElementById('audioTestButton').style.display = 'block';
                 this.gameState = 'title';
             }
             
