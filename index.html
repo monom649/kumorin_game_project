@@ -681,9 +681,20 @@
                 // BGMをループ設定
                 this.audio.bgm.loop = true;
                 
-                // 音量調整
-                Object.values(this.audio).forEach(audio => {
+                // 音量調整とプリロード
+                Object.entries(this.audio).forEach(([name, audio]) => {
                     audio.volume = 0.7;
+                    audio.preload = 'auto';
+                    
+                    // 読み込み完了ログ
+                    audio.addEventListener('canplaythrough', () => {
+                        console.log(`🎵 音声読み込み完了: ${name}`);
+                    });
+                    
+                    // エラーログ
+                    audio.addEventListener('error', (e) => {
+                        console.error(`❌ 音声読み込みエラー: ${name}`, e);
+                    });
                 });
             }
 
@@ -691,10 +702,20 @@
                 try {
                     if (this.audio[audioName]) {
                         this.audio[audioName].currentTime = 0;
-                        this.audio[audioName].play();
+                        const playPromise = this.audio[audioName].play();
+                        
+                        if (playPromise !== undefined) {
+                            playPromise.then(() => {
+                                console.log(`🎵 音声再生成功: ${audioName}`);
+                            }).catch(error => {
+                                console.error(`🔇 音声再生失敗: ${audioName}`, error);
+                            });
+                        }
+                    } else {
+                        console.error(`❌ 音声ファイルが見つかりません: ${audioName}`);
                     }
                 } catch (error) {
-                    console.log('音声再生エラー:', error);
+                    console.error('音声再生エラー:', audioName, error);
                 }
             }
 
