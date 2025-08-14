@@ -885,6 +885,9 @@
                     bgm: new Audio('./audio/BGM_HURRY.mp3')
                 };
                 
+                console.log('🎵 音声ファイル読み込み開始');
+                document.getElementById('debugLog').textContent = '音声ファイル読み込み中';
+                
                 // BGMをループ設定
                 this.audio.bgm.loop = true;
                 
@@ -897,18 +900,30 @@
                     audio.preload = 'auto';
                     this.audioStatus[name] = 'loading';
                     
+                    console.log(`🔗 ${name} パス: ${audio.src}`);
+                    
                     // 読み込み完了ログ
                     audio.addEventListener('canplaythrough', () => {
                         console.log(`🎵 音声読み込み完了: ${name}`);
                         this.audioStatus[name] = 'ready';
+                        document.getElementById('debugLog').textContent = `${name}読み込み完了`;
                         this.updateAudioDebug();
                     });
                     
                     // エラーログ
                     audio.addEventListener('error', (e) => {
                         console.error(`❌ 音声読み込みエラー: ${name}`, e);
+                        console.error(`❌ ${name} URL: ${audio.src}`);
                         this.audioStatus[name] = 'error';
+                        document.getElementById('debugLog').textContent = `${name}読み込みエラー`;
+                        document.getElementById('audioFileStatus').textContent = `${name}:エラー`;
                         this.updateAudioDebug();
+                    });
+                    
+                    // 読み込み開始確認
+                    audio.addEventListener('loadstart', () => {
+                        console.log(`🔄 ${name} 読み込み開始`);
+                        document.getElementById('debugLog').textContent = `${name}読み込み開始`;
                     });
                 });
                 
