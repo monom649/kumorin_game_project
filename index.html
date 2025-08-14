@@ -668,14 +668,14 @@
             loadAudio() {
                 // 音声ファイルの読み込み
                 this.audio = {
-                    title: new Audio('https://example.com/title.wav'),
-                    soda: new Audio('https://example.com/soda.wav'),
-                    ohno: new Audio('https://example.com/ohno.wav'),
-                    gamestart: new Audio('https://example.com/gamestart.wav'),
-                    item: new Audio('https://example.com/item.wav'),
-                    out: new Audio('https://example.com/out.wav'),
-                    gameover: new Audio('https://example.com/gameover.wav'),
-                    bgm: new Audio('https://example.com/BGM_HURRY.mp3')
+                    title: new Audio('./audio/title.wav'),
+                    soda: new Audio('./audio/soda.wav'),
+                    ohno: new Audio('./audio/ohno.wav'),
+                    gamestart: new Audio('./audio/gamestart.wav'),
+                    item: new Audio('./audio/item.wav'),
+                    out: new Audio('./audio/out.wav'),
+                    gameover: new Audio('./audio/gameover.wav'),
+                    bgm: new Audio('./audio/BGM_HURRY.mp3')
                 };
                 
                 // BGMをループ設定
