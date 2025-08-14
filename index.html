@@ -422,6 +422,8 @@
                     <div>Gamma: <span id="gammaValue">0</span>°</div>
                     <div>操作: <span id="controlStatus">待機中</span></div>
                     <div>スピード: <span id="speedStatus">×1.0</span></div>
+                    <div style="color: yellow;">音声: <span id="audioStatus">未解放</span></div>
+                    <div style="color: cyan;">最新: <span id="debugLog">-</span></div>
                     <div>バナナ: <span id="bananaStatus">0個</span></div>
                 </div>
             </div>
@@ -629,6 +631,7 @@
             setupEventListeners() {
                 // スタートボタン
                 document.getElementById('startButton').addEventListener('click', async () => {
+                    document.getElementById('debugLog').textContent = 'スタートボタンクリック';
                     // 音声解放を最初に実行
                     await this.unlockAudio();
                     this.requestGyroPermission();
@@ -913,6 +916,9 @@
 
             async unlockAudio() {
                 console.log('🔓 unlockAudio() 開始 - 現在の状態:', this.audioUnlocked);
+                document.getElementById('debugLog').textContent = 'unlockAudio開始';
+                document.getElementById('audioStatus').textContent = this.audioUnlocked ? '解放済み' : '未解放';
+                
                 if (!this.audioUnlocked) {
                     try {
                         // Web Audio APIを使用してコンテキストを作成・開始
@@ -958,6 +964,8 @@
                         
                         this.audioUnlocked = true;
                         console.log('🔓 音声コンテキスト解放完了 (WebAudio) - audioUnlocked:', this.audioUnlocked);
+                        document.getElementById('debugLog').textContent = '音声解放完了';
+                        document.getElementById('audioStatus').textContent = '解放済み';
                         
                     } catch (error) {
                         console.error('音声解放エラー:', error);
@@ -970,8 +978,12 @@
             playAudio(audioName) {
                 try {
                     console.log(`🎵 playAudio(${audioName}) 呼び出し - audioUnlocked: ${this.audioUnlocked}`);
+                    document.getElementById('debugLog').textContent = `playAudio(${audioName})`;
+                    document.getElementById('audioStatus').textContent = this.audioUnlocked ? '解放済み' : '未解放';
+                    
                     if (!this.audioUnlocked) {
                         console.log('🔒 音声がまだ解放されていません');
+                        document.getElementById('debugLog').textContent = `音声未解放 ${audioName}`;
                         return;
                     }
                     
