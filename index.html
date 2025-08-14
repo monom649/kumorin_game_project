@@ -663,11 +663,11 @@
                 };
                 
                 this.assets.crow.src = 'https://i.imgur.com/TdVc7OM.jpg';
-                this.assets.bird.src = 'https://i.imgur.com/gOrPr79.jpg';
+                this.assets.bird.src = 'https://i.imgur.com/OjHmClD.gif'; // 新しい鳥GIF (550x480)
                 this.assets.banana.src = 'https://i.imgur.com/n4B27qz.jpg';
                 this.assets.cloud1.src = 'https://i.imgur.com/qY1JVuT.jpg';
                 this.assets.cloud2.src = 'https://i.imgur.com/0ybVRKX.jpg';
-                this.assets.meteorite.src = 'https://i.imgur.com/8cca641.png'; // 修正されたURL
+                this.assets.meteorite.src = 'https://i.imgur.com/qHUcJgE.gif'; // 新しい隕石GIF (450x460)
             }
 
             loadAudio() {
@@ -1022,8 +1022,8 @@
                     this.obstacles.push({
                         x: startX,
                         y: y,
-                        width: 200,
-                        height: 200,
+                        width: 180, // 550pxを適度に縮小
+                        height: 156, // 480pxを適度に縮小（比率維持）
                         type: 'bird',
                         direction: direction,
                         speed: birdSpeed * this.speedMultiplier
@@ -1033,7 +1033,7 @@
                 // 隕石の生成
                 if (Math.random() < meteoriteChance) {
                     // 隕石は上から垂直に落下
-                    const x = Math.random() * (1080 - 150); // 150pxサイズを考慮
+                    const x = Math.random() * (1080 - 140); // 140pxサイズを考慮
                     const y = -200;
                     
                     // 隕石の速度は鳥の1.5倍
@@ -1043,8 +1043,8 @@
                     this.obstacles.push({
                         x: x,
                         y: y,
-                        width: 150,
-                        height: 150,
+                        width: 140, // 450pxを適度に縮小
+                        height: 143, // 460pxを適度に縮小（比率維持）
                         type: 'meteorite',
                         direction: 'down', // 垂直落下
                         speed: meteoriteSpeed * this.speedMultiplier
@@ -1212,23 +1212,20 @@
                 this.obstacles.forEach(obstacle => {
                     try {
                         if (obstacle.type === 'bird') {
-                            const drawWidth = 200;
-                            const drawHeight = 200;
-                            
                             if (this.assets.bird && this.assets.bird.complete) {
                                 this.ctx.save();
                                 if (obstacle.direction === 'left') {
                                     this.ctx.scale(-1, 1);
                                     this.ctx.drawImage(
                                         this.assets.bird,
-                                        -(obstacle.x + drawWidth), obstacle.y,
-                                        drawWidth, drawHeight
+                                        -(obstacle.x + obstacle.width), obstacle.y,
+                                        obstacle.width, obstacle.height
                                     );
                                 } else {
                                     this.ctx.drawImage(
                                         this.assets.bird,
                                         obstacle.x, obstacle.y,
-                                        drawWidth, drawHeight
+                                        obstacle.width, obstacle.height
                                     );
                                 }
                                 this.ctx.restore();
