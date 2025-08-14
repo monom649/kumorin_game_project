@@ -114,18 +114,17 @@
 
         #sodaOjisan {
             position: absolute;
-            bottom: -500px; /* 画面外から開始 */
+            bottom: -1000px; /* 画面外から開始 */
             left: 50%;
             transform: translateX(-50%);
-            width: 500px; /* より大きく */
-            height: 500px;
+            width: 1000px; /* 2倍大きく */
+            height: 1000px;
             background-image: url('https://i.imgur.com/4aHLhwq.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             z-index: 2;
-            /* デバッグ用の枠線 */
-            border: 2px solid red;
+            /* デバッグ用の枠線を削除 */
         }
 
         /* ゲーム画面 */
@@ -271,10 +270,10 @@
         /* アニメーション定義 */
         @keyframes slideUp {
             from { 
-                bottom: -500px;
+                bottom: -1000px;
             }
             to { 
-                bottom: 500px; /* くもりんと同じ高さまで上昇 */
+                bottom: 200px; /* より控えめな位置まで上昇 */
             }
         }
 
@@ -285,9 +284,9 @@
                 opacity: 1;
             }
             to { 
-                bottom: 1500px; /* 画面上部へ飛んでいく */
-                transform: translateX(-50%) scale(0.5);
-                opacity: 0.8;
+                bottom: 1000px; /* 控えめに上昇 */
+                transform: translateX(-50%) scale(0.7);
+                opacity: 0.9;
             }
         }
 
