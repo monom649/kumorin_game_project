@@ -353,6 +353,22 @@
         .shake {
             animation: screenShake 0.5s ease-in-out;
         }
+
+        /* くもりん死亡時の回転落下アニメーション */
+        @keyframes kumorinDeath {
+            0% { 
+                transform: translateX(-50%) translateY(-50%) rotate(0deg);
+                opacity: 1;
+            }
+            100% { 
+                transform: translateX(-50%) translateY(800px) rotate(180deg);
+                opacity: 0.7;
+            }
+        }
+
+        .kumorin-death {
+            animation: kumorinDeath 1.0s ease-in forwards;
+        }
     </style>
 </head>
 <body>
@@ -1665,13 +1681,37 @@
                 // BGM停止と効果音再生
                 this.stopAudio('bgm');
                 this.playAudio('out');
-                setTimeout(() => {
-                    this.playAudio('gameover');
-                }, 500);
                 
-                document.getElementById('finalDistance').textContent = Math.floor(this.distance) + 'm';
-                document.getElementById('finalBananas').textContent = this.bananaCount;
-                document.getElementById('gameOverScreen').style.display = 'flex';
+                // 画面揺れとくもりん回転落下の同時実行
+                const container = document.getElementById('gameContainer');
+                const kumorin = document.getElementById('kumorinPlayer');
+                
+                // 画面揺れ開始
+                container.classList.add('shake');
+                
+                // くもりん回転落下開始
+                if (kumorin) {
+                    kumorin.classList.add('kumorin-death');
+                }
+                
+                // アニメーション終了後にリザルト画面表示
+                setTimeout(() => {
+                    // 揺れクラス削除
+                    container.classList.remove('shake');
+                    
+                    // ゲームオーバー音再生
+                    this.playAudio('gameover');
+                    
+                    // リザルト表示
+                    document.getElementById('finalDistance').textContent = Math.floor(this.distance) + 'm';
+                    document.getElementById('finalBananas').textContent = this.bananaCount;
+                    document.getElementById('gameOverScreen').style.display = 'flex';
+                    
+                    // くもりんの死亡アニメーションクラス削除（次回リセット用）
+                    if (kumorin) {
+                        kumorin.classList.remove('kumorin-death');
+                    }
+                }, 1000); // 1秒後（アニメーション完了後）
             }
 
             shareScore() {
@@ -1694,7 +1734,8 @@
             resetIntroScene() {
                 // ソーダおじさんとくもりんの状態をリセット
                 const soda = document.getElementById('sodaOjisan');
-                const kumorin = document.getElementById('kumorinIntro');
+                const kumorinIntro = document.getElementById('kumorinIntro');
+                const kumorinPlayer = document.getElementById('kumorinPlayer');
                 const container = document.getElementById('gameContainer');
                 
                 if (soda) {
@@ -1702,9 +1743,14 @@
                     console.log('ソーダおじさんアニメーションクラスをリセット');
                 }
                 
-                if (kumorin) {
-                    kumorin.classList.remove('kumorin-flyout');
-                    console.log('くもりんアニメーションクラスをリセット');
+                if (kumorinIntro) {
+                    kumorinIntro.classList.remove('kumorin-flyout');
+                    console.log('くもりんイントロアニメーションクラスをリセット');
+                }
+                
+                if (kumorinPlayer) {
+                    kumorinPlayer.classList.remove('kumorin-death');
+                    console.log('くもりん死亡アニメーションクラスをリセット');
                 }
                 
                 if (container) {
