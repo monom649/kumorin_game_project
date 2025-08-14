@@ -873,16 +873,17 @@
             }
 
             loadAudio() {
-                // 音声ファイルの読み込み
+                // 音声ファイルの読み込み（絶対パス使用）
+                const audioBase = window.location.origin + '/audio/';
                 this.audio = {
-                    title: new Audio('./audio/title.wav'),
-                    soda: new Audio('./audio/soda.wav'),
-                    ohno: new Audio('./audio/ohno.wav'),
-                    gamestart: new Audio('./audio/gamestart.wav'),
-                    item: new Audio('./audio/item.wav'),
-                    out: new Audio('./audio/out.wav'),
-                    gameover: new Audio('./audio/gameover.wav'),
-                    bgm: new Audio('./audio/BGM_HURRY.mp3')
+                    title: new Audio(audioBase + 'title.wav'),
+                    soda: new Audio(audioBase + 'soda.wav'),
+                    ohno: new Audio(audioBase + 'ohno.wav'),
+                    gamestart: new Audio(audioBase + 'gamestart.wav'),
+                    item: new Audio(audioBase + 'item.wav'),
+                    out: new Audio(audioBase + 'out.wav'),
+                    gameover: new Audio(audioBase + 'gameover.wav'),
+                    bgm: new Audio(audioBase + 'BGM_HURRY.mp3')
                 };
                 
                 console.log('🎵 音声ファイル読み込み開始');
