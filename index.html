@@ -113,7 +113,7 @@
 
         #sodaOjisan {
             position: absolute;
-            bottom: -350px; /* 少し上にして見えやすく */
+            bottom: -400px; /* 画面外から開始 */
             left: 50%;
             transform: translateX(-50%);
             width: 300px;
@@ -122,8 +122,9 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            /* デバッグ用の枠線 */
-            /* border: 2px solid red; */
+            z-index: 2; /* くもりんより前面に */
+            /* デバッグ用の枠線 - 一時的に有効化 */
+            border: 2px solid red;
         }
 
         /* ゲーム画面 */
@@ -268,8 +269,14 @@
 
         /* アニメーション定義 */
         @keyframes slideUp {
-            from { transform: translateX(-50%) translateY(100vh); }
-            to { transform: translateX(-50%) translateY(-100px); }
+            from { 
+                transform: translateX(-50%) translateY(0); 
+                bottom: -400px;
+            }
+            to { 
+                transform: translateX(-50%) translateY(0); 
+                bottom: 400px;
+            }
         }
 
         @keyframes flyUp {
