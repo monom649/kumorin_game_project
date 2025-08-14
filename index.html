@@ -1051,27 +1051,25 @@
                         setTimeout(() => {
                             container.classList.remove('shake');
                         }, 500);
-                    }, 1500);
-                    
-                    // 1.0秒後（ソーダおじさんの停止と同時）にくもりん飛び出し
-                    setTimeout(() => {
+                        
+                        // 揺れと同時にくもりん飛び出し開始
                         const kumorin = document.getElementById('kumorinIntro');
                         kumorin.classList.add('kumorin-flyout');
                         this.playAudio('ohno'); // くもりん飛ばされる音
                         
-                        // 0.5秒後にソーダおじさんの下降開始
+                        // 1.0秒後（くもりんが飛んでいく途中）にソーダおじさん下降開始
                         setTimeout(() => {
                             if (soda) {
                                 soda.classList.add('soda-exit');
-                                console.log('ソーダおじさん下降アニメーション開始（0.5秒遅延）');
+                                console.log('ソーダおじさん下降アニメーション開始');
                             }
-                        }, 500);
+                        }, 1000);
                         
-                        // 1.5秒後にゲーム開始
+                        // 2.5秒後にゲーム開始（全アニメーション完了後）
                         setTimeout(() => {
                             this.startGame();
-                        }, 1500);
-                    }, 1000);
+                        }, 2500);
+                    }, 1500);
                 }, 500);
             }
 
