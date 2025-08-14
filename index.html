@@ -822,20 +822,22 @@
                     const relativeBeta = beta - this.gyroBaseline.beta;
                     const relativeGamma = gamma - this.gyroBaseline.gamma;
                     
-                    // 感度を調整（20度から15度に変更してより敏感に）
-                    const sensitivity = 15;
+                    // 感度を左右と上下で別々に調整
+                    const gammaSensitivity = 15; // 左右の感度
+                    const betaSensitivityUp = 25; // 上移動の感度（より大きく傾けないと上に行かない）
+                    const betaSensitivityDown = 12; // 下移動の感度（少し傾けるだけで下に行く）
                     
                     // 左右移動（Gamma値: 左右の傾き）
-                    if (relativeGamma < -sensitivity) {
+                    if (relativeGamma < -gammaSensitivity) {
                         shouldMoveLeft = true;
-                    } else if (relativeGamma > sensitivity) {
+                    } else if (relativeGamma > gammaSensitivity) {
                         shouldMoveRight = true;
                     }
                     
-                    // 上下移動（Beta値: 前後の傾き）
-                    if (relativeBeta < -sensitivity) {
+                    // 上下移動（Beta値: 前後の傾き、非対称な感度）
+                    if (relativeBeta < -betaSensitivityUp) {
                         shouldMoveUp = true;
-                    } else if (relativeBeta > sensitivity) {
+                    } else if (relativeBeta > betaSensitivityDown) {
                         shouldMoveDown = true;
                     }
                     
@@ -855,7 +857,7 @@
                         }
                         
                         document.getElementById('controlStatus').textContent = 
-                            `${status} (相対B:${relativeBeta}, 相対G:${relativeGamma})`;
+                            `${status} (相対B:${relativeBeta}[上${betaSensitivityUp}/下${betaSensitivityDown}], G:${relativeGamma}[${gammaSensitivity}])`;
                     }
                 }
                 
