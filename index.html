@@ -1014,7 +1014,7 @@
                 if (Math.random() < birdChance) {
                     const direction = Math.random() < 0.5 ? 'left' : 'right';
                     const startX = direction === 'left' ? -300 : 1380;
-                    const y = Math.random() * 800 + 560;
+                    const y = Math.random() * 1400 + 300; // 300〜1700の範囲（画面下部も含む）
                     
                     let birdSpeed = 5;
                     if (this.distance >= 5000) birdSpeed = 6;
