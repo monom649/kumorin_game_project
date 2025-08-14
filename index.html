@@ -70,22 +70,6 @@
             position: relative;
         }
 
-        /* 音声デバッグ表示 */
-        #audioDebug {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 24px;
-            font-family: monospace;
-            z-index: 2000;
-            display: none;
-            max-width: 500px;
-            pointer-events: none;
-        }
 
         #kumorinGif {
             width: 500px;
@@ -345,9 +329,6 @@
 </head>
 <body>
     <div class="game-container" id="gameContainer">
-        <!-- 音声デバッグ表示 -->
-        <div id="audioDebug"></div>
-
         <!-- タイトル画面 -->
         <div id="titleScreen">
             <div id="kumorinGif"></div>
@@ -780,12 +761,10 @@
                         }
                         
                         this.audioUnlocked = true;
-                        this.showAudioMessage('🔓 音声解放完了 (WebAudio)');
                         console.log('🔓 音声コンテキスト解放完了 (WebAudio)');
                         
                     } catch (error) {
                         console.error('音声解放エラー:', error);
-                        this.showAudioMessage(`❌ 音声解放失敗: ${error.message}`);
                     }
                 }
             }
@@ -807,10 +786,8 @@
                         if (playPromise !== undefined) {
                             playPromise.then(() => {
                                 console.log(`🎵 音声再生成功: ${audioName}`);
-                                this.showAudioMessage(`🎵 ${audioName} 再生成功`);
                             }).catch(error => {
                                 console.error(`🔇 音声再生失敗: ${audioName}`, error);
-                                this.showAudioMessage(`🔇 ${audioName} 再生失敗: ${error.name}`);
                                 
                                 // 最後の手段：ユーザーに直接操作を求める
                                 this.forceAudioPlay(audioName);
@@ -820,36 +797,28 @@
                             setTimeout(() => {
                                 if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
                                     console.log(`🎵 音声再生成功 (古いブラウザ): ${audioName}`);
-                                    this.showAudioMessage(`🎵 ${audioName} 再生成功 (old)`);
                                 } else {
                                     console.log(`🔇 音声再生失敗 (古いブラウザ): ${audioName}`);
-                                    this.showAudioMessage(`🔇 ${audioName} 失敗 (old)`);
                                 }
                             }, 100);
                         }
                     } else {
                         console.error(`❌ 音声ファイルが見つかりません: ${audioName}`);
-                        this.showAudioMessage(`❌ ${audioName} ファイル無し`);
                     }
                 } catch (error) {
                     console.error('音声再生エラー:', audioName, error);
-                    this.showAudioMessage(`❌ ${audioName} エラー: ${error.message}`);
                 }
             }
             
             forceAudioPlay(audioName) {
-                // 画面タップで音声再生を促すメッセージ
-                this.showAudioMessage(`👆 画面タップで${audioName}再生`);
-                
+                // フォールバック: 次のタップで音声再生を試行
                 const tapHandler = () => {
                     if (this.audio[audioName]) {
                         this.audio[audioName].currentTime = 0;
                         this.audio[audioName].play().then(() => {
                             console.log(`🎵 タップ後音声再生成功: ${audioName}`);
-                            this.showAudioMessage(`🎵 ${audioName} タップ後成功`);
                         }).catch(e => {
                             console.log(`🔇 タップ後も再生失敗: ${audioName}`, e);
-                            this.showAudioMessage(`🔇 ${audioName} タップ後も失敗`);
                         });
                     }
                     
@@ -1518,29 +1487,12 @@
             }
             
             updateAudioDebug() {
-                const debugDiv = document.getElementById('audioDebug');
-                if (debugDiv) {
-                    let statusText = '🎵 音声状態:<br>';
-                    Object.entries(this.audioStatus).forEach(([name, status]) => {
-                        const emoji = status === 'ready' ? '✅' : status === 'error' ? '❌' : '⏳';
-                        statusText += `${emoji} ${name}: ${status}<br>`;
-                    });
-                    debugDiv.innerHTML = statusText;
-                    debugDiv.style.display = 'block';
-                }
+                // デバッグ機能は無効化
             }
             
             showAudioMessage(message) {
-                const debugDiv = document.getElementById('audioDebug');
-                if (debugDiv) {
-                    debugDiv.innerHTML = message;
-                    debugDiv.style.display = 'block';
-                    
-                    // 3秒後に元の表示に戻す
-                    setTimeout(() => {
-                        this.updateAudioDebug();
-                    }, 3000);
-                }
+                // デバッグ機能は無効化
+                console.log('Audio:', message);
             }
             
             
