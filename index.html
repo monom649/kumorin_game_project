@@ -942,13 +942,13 @@
                     
                     setTimeout(() => {
                         this.gameLoop();
-                    }, 33); // 30FPS
+                    }, 16); // 60FPS
                 } catch (error) {
                     console.error('ゲームループエラー:', error);
                     // エラーが発生してもゲームを継続
                     setTimeout(() => {
                         this.gameLoop();
-                    }, 33);
+                    }, 16);
                 }
             }
 
@@ -956,8 +956,8 @@
                 // プレイヤー移動（ジャイロ）
                 this.updatePlayerMovement();
                 
-                // 距離更新
-                this.distance += this.speedMultiplier * 3.33; // 30秒で100m
+                // 距離更新（60FPSに合わせて調整）
+                this.distance += this.speedMultiplier * 1.67; // 60FPSで30秒100m
                 document.getElementById('distanceDisplay').textContent = Math.floor(this.distance) + 'm';
                 
                 // 障害物・アイテム生成
@@ -1007,10 +1007,10 @@
                     const relativeBeta = beta - this.gyroBaseline.beta;
                     const relativeGamma = gamma - this.gyroBaseline.gamma;
                     
-                    // 感度を左右と上下で別々に調整
-                    const gammaSensitivity = 15; // 左右の感度
-                    const betaSensitivityUp = 25; // 上移動の感度（より大きく傾けないと上に行かない）
-                    const betaSensitivityDown = 12; // 下移動の感度（少し傾けるだけで下に行く）
+                    // 感度を左右と上下で別々に調整（より敏感に）
+                    const gammaSensitivity = 10; // 左右の感度（15→10に変更）
+                    const betaSensitivityUp = 18; // 上移動の感度（25→18に変更）
+                    const betaSensitivityDown = 8; // 下移動の感度（12→8に変更）
                     
                     // 左右移動（Gamma値: 左右の傾き）
                     if (relativeGamma < -gammaSensitivity) {
