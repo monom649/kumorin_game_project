@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>くもりんとばし</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 400px;
+            max-height: 700px;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+            border: 2px solid #4682B4;
+            border-radius: 10px;
+            overflow: hidden;
+            transform-origin: center;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        #intro {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            background-size: 400% 400%;
+            animation: gradientShift 4s ease infinite;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 1000;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .intro-title {
+            font-size: clamp(2rem, 8vw, 4rem);
+            font-weight: bold;
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .start-button {
+            padding: 15px 30px;
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+        }
+        
+        #gameUI {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            z-index: 100;
+            display: none;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        .ui-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .ui-bottom {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        #gameOver {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 1000;
+            color: white;
+        }
+        
+        .game-over-title {
+            font-size: clamp(2rem, 6vw, 3rem);
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+        
+        .final-score {
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            margin-bottom: 30px;
+        }
+        
+        .restart-button {
+            padding: 12px 25px;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 480px) {
+            #gameContainer {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+                border: none;
+            }
+        }
+        
+        @media (orientation: landscape) and (max-height: 500px) {
+            #gameContainer {
+                transform: scale(0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="intro">
+            <div class="intro-title">🎮 くもりんとばし</div>
+            <div style="margin: 20px 0; text-align: center;">
+                <div style="font-size: clamp(1rem, 3vw, 1.2rem); margin-bottom: 10px; color: white;">🍌 バナナを集めてスピードアップ！</div>
+                <div style="font-size: clamp(0.9rem, 2.5vw, 1rem); color: rgba(255,255,255,0.9);">鳥を避けて雲の上を駆け抜けよう</div>
+            </div>
+            <button class="start-button" onclick="startGame()">🚀 ゲームスタート</button>
+        </div>
+        
+        <div id="gameUI">
+            <div class="ui-top">
+                <div>高度: <span id="distance">0</span>m</div>
+                <div>🍌: <span id="bananas">0</span></div>
+            </div>
+            <div class="ui-bottom">
+                <div>スピード: <span id="speed">1.0</span>x</div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="gameOver">
+            <div class="game-over-title">ゲームオーバー</div>
+            <div class="final-score">
+                到達高度: <span id="finalDistance">0</span>m<br>
+                バナナ: <span id="finalBananas">0</span>個
+            </div>
+            <button class="restart-button" onclick="restartGame()">もう一度プレイ</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            const container = document.getElementById('gameContainer');
+            const rect = container.getBoundingClientRect();
+            canvas.width = 400;
+            canvas.height = 700;
+            
+            const scaleX = rect.width / canvas.width;
+            const scaleY = rect.height / canvas.height;
+            const scale = Math.min(scaleX, scaleY);
+            
+            canvas.style.transform = `scale(${scale})`;
+            canvas.style.transformOrigin = 'top left';
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        class Game {
+            constructor() {
+                this.gameState = 'intro';
+                this.distance = 0;
+                this.speed = 15;
+                this.bananaCount = 0;
+                this.speedMultiplier = 1.0;
+                this.speedLevels = [1.0, 1.4, 1.8, 2.2, 2.6, 3.0];
+                
+                this.player = {
+                    x: 200,
+                    y: 600,
+                    width: 40,
+                    height: 40,
+                    color: '#FFD700'
+                };
+                
+                this.clouds = [];
+                this.bananas = [];
+                this.birds = [];
+                this.introAnimations = [];
+                
+                this.lastTime = 0;
+                this.cloudTimer = 0;
+                this.bananaTimer = 0;
+                this.birdTimer = 0;
+                
+                this.gamma = 0;
+                this.beta = 0;
+                this.hasMotionPermission = false;
+                
+                this.initIntroAnimations();
+                this.setupDeviceOrientation();
+            }
+            
+            initIntroAnimations() {
+                this.introAnimations = [
+                    { type: 'kumorin', x: 50, y: 200, size: 60, bounce: 0 },
+                    { type: 'banana', x: 150, y: 300, rotation: 0 },
+                    { type: 'bird', x: 250, y: 150, flap: 0 },
+                    { type: 'soda', x: 300, y: 400, size: 50, pulse: 0 }
+                ];
+            }
+            
+            async setupDeviceOrientation() {
+                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    try {
+                        const permission = await DeviceOrientationEvent.requestPermission();
+                        if (permission === 'granted') {
+                            this.hasMotionPermission = true;
+                            window.addEventListener('deviceorientation', (e) => {
+                                this.gamma = e.gamma || 0;
+                                this.beta = e.beta || 0;
+                            });
+                        }
+                    } catch (error) {
+                        console.log('Motion permission error:', error);
+                    }
+                } else if (window.DeviceOrientationEvent) {
+                    this.hasMotionPermission = true;
+                    window.addEventListener('deviceorientation', (e) => {
+                        this.gamma = e.gamma || 0;
+                        this.beta = e.beta || 0;
+                    });
+                }
+            }
+            
+            start() {
+                this.gameState = 'playing';
+                document.getElementById('intro').style.display = 'none';
+                document.getElementById('gameUI').style.display = 'block';
+                this.loop();
+            }
+            
+            restart() {
+                this.distance = 0;
+                this.speed = 15;
+                this.bananaCount = 0;
+                this.speedMultiplier = 1.0;
+                this.player.x = 200;
+                this.player.y = 600;
+                this.clouds = [];
+                this.bananas = [];
+                this.birds = [];
+                this.cloudTimer = 0;
+                this.bananaTimer = 0;
+                this.birdTimer = 0;
+                
+                document.getElementById('gameOver').style.display = 'none';
+                document.getElementById('gameUI').style.display = 'block';
+                this.gameState = 'playing';
+                this.loop();
+            }
+            
+            updatePlayerMovement() {
+                const baseSpeed = 15;
+                const moveSpeed = baseSpeed * this.speedMultiplier;
+                
+                let shouldMoveLeft = false;
+                let shouldMoveRight = false;
+                let shouldMoveUp = false;
+                let shouldMoveDown = false;
+                
+                if (this.hasMotionPermission) {
+                    if (this.gamma < -15) shouldMoveLeft = true;
+                    else if (this.gamma > 15) shouldMoveRight = true;
+                    if (this.beta < -15) shouldMoveUp = true;
+                    else if (this.beta > 15) shouldMoveDown = true;
+                }
+                
+                if (this.keys) {
+                    if (this.keys['ArrowLeft'] || this.keys['a']) shouldMoveLeft = true;
+                    if (this.keys['ArrowRight'] || this.keys['d']) shouldMoveRight = true;
+                    if (this.keys['ArrowUp'] || this.keys['w']) shouldMoveUp = true;
+                    if (this.keys['ArrowDown'] || this.keys['s']) shouldMoveDown = true;
+                }
+                
+                if (shouldMoveLeft && this.player.x > 0) {
+                    this.player.x -= moveSpeed;
+                }
+                if (shouldMoveRight && this.player.x < canvas.width - this.player.width) {
+                    this.player.x += moveSpeed;
+                }
+                if (shouldMoveUp && this.player.y > 0) {
+                    this.player.y -= moveSpeed;
+                }
+                if (shouldMoveDown && this.player.y < canvas.height - this.player.height) {
+                    this.player.y += moveSpeed;
+                }
+                
+                this.player.x = Math.max(0, Math.min(canvas.width - this.player.width, this.player.x));
+                this.player.y = Math.max(0, Math.min(canvas.height - this.player.height, this.player.y));
+            }
+            
+            updateSpeedSystem() {
+                const levelIndex = Math.min(this.bananaCount, this.speedLevels.length - 1);
+                this.speedMultiplier = this.speedLevels[levelIndex];
+                document.getElementById('speed').textContent = this.speedMultiplier.toFixed(1);
+            }
+            
+            update(deltaTime) {
+                if (this.gameState !== 'playing') return;
+                
+                this.distance += deltaTime * 0.05;
+                this.updatePlayerMovement();
+                this.updateSpeedSystem();
+                
+                this.cloudTimer += deltaTime;
+                if (this.cloudTimer > 800) {
+                    this.clouds.push({
+                        x: Math.random() * (canvas.width - 80),
+                        y: -50,
+                        width: 80,
+                        height: 40,
+                        speed: 2
+                    });
+                    this.cloudTimer = 0;
+                }
+                
+                this.clouds.forEach(cloud => {
+                    cloud.y += cloud.speed;
+                });
+                this.clouds = this.clouds.filter(cloud => cloud.y < canvas.height + 100);
+                
+                this.bananaTimer += deltaTime;
+                if (this.bananaTimer > 1500) {
+                    this.bananas.push({
+                        x: Math.random() * (canvas.width - 30),
+                        y: -30,
+                        width: 30,
+                        height: 30,
+                        speed: 3
+                    });
+                    this.bananaTimer = 0;
+                }
+                
+                this.bananas.forEach(banana => {
+                    banana.y += banana.speed;
+                });
+                this.bananas = this.bananas.filter(banana => banana.y < canvas.height + 50);
+                
+                this.birdTimer += deltaTime;
+                const birdSpawnRate = Math.max(2000 - this.distance * 0.5, 800);
+                if (this.birdTimer > birdSpawnRate) {
+                    let birdX;
+                    do {
+                        birdX = Math.random() * (canvas.width - 50);
+                    } while (Math.abs(birdX - this.player.x) < 150);
+                    
+                    this.birds.push({
+                        x: birdX,
+                        y: -50,
+                        width: 50,
+                        height: 30,
+                        speed: 2 + Math.random() * 2,
+                        direction: Math.random() > 0.5 ? 1 : -1
+                    });
+                    this.birdTimer = 0;
+                }
+                
+                this.birds.forEach(bird => {
+                    bird.y += bird.speed;
+                    bird.x += bird.direction * 0.5;
+                });
+                this.birds = this.birds.filter(bird => bird.y < canvas.height + 100);
+                
+                this.checkCollisions();
+                
+                document.getElementById('distance').textContent = Math.floor(this.distance);
+                document.getElementById('bananas').textContent = this.bananaCount;
+            }
+            
+            checkCollisions() {
+                this.bananas.forEach((banana, index) => {
+                    if (this.isColliding(this.player, banana)) {
+                        this.bananas.splice(index, 1);
+                        this.bananaCount++;
+                    }
+                });
+                
+                this.birds.forEach(bird => {
+                    if (this.isColliding(this.player, bird, 10)) {
+                        this.gameOver();
+                    }
+                });
+            }
+            
+            isColliding(rect1, rect2, margin = 5) {
+                return rect1.x < rect2.x + rect2.width - margin &&
+                       rect1.x + rect1.width > rect2.x + margin &&
+                       rect1.y < rect2.y + rect2.height - margin &&
+                       rect1.y + rect1.height > rect2.y + margin;
+            }
+            
+            gameOver() {
+                this.gameState = 'gameOver';
+                document.getElementById('gameUI').style.display = 'none';
+                document.getElementById('finalDistance').textContent = Math.floor(this.distance);
+                document.getElementById('finalBananas').textContent = this.bananaCount;
+                document.getElementById('gameOver').style.display = 'flex';
+            }
+            
+            renderIntro() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#98FB98');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                this.introAnimations.forEach(anim => {
+                    if (anim.type === 'kumorin') {
+                        anim.bounce += 0.1;
+                        const bounceY = anim.y + Math.sin(anim.bounce) * 10;
+                        this.drawKumorin(anim.x, bounceY, anim.size);
+                    } else if (anim.type === 'banana') {
+                        anim.rotation += 0.05;
+                        this.drawBanana(anim.x, anim.y, 25, anim.rotation);
+                    } else if (anim.type === 'bird') {
+                        anim.flap += 0.15;
+                        this.drawBird(anim.x, anim.y, 40, 25, anim.flap);
+                    } else if (anim.type === 'soda') {
+                        anim.pulse += 0.08;
+                        const pulseSize = anim.size + Math.sin(anim.pulse) * 5;
+                        this.drawSodaOjisan(anim.x, anim.y, pulseSize);
+                    }
+                });
+            }
+            
+            render() {
+                if (this.gameState === 'intro') {
+                    this.renderIntro();
+                    return;
+                }
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#98FB98');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                this.clouds.forEach(cloud => {
+                    this.drawCloud(cloud.x, cloud.y, cloud.width, cloud.height);
+                });
+                
+                this.bananas.forEach(banana => {
+                    this.drawBanana(banana.x, banana.y, banana.width);
+                });
+                
+                this.birds.forEach(bird => {
+                    this.drawBird(bird.x, bird.y, bird.width, bird.height, Date.now() * 0.01, bird.direction);
+                });
+                
+                this.drawKumorin(this.player.x, this.player.y, this.player.width);
+                
+                if (this.speedMultiplier > 1.0) {
+                    ctx.save();
+                    ctx.globalAlpha = 0.7;
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(this.player.x - 5, this.player.y - 5, this.player.width + 10, this.player.height + 10);
+                    ctx.restore();
+                }
+            }
+            
+            drawKumorin(x, y, size) {
+                ctx.save();
+                
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.fillRect(x + 2, y + size + 2, size, 8);
+                
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(x, y, size, size);
+                
+                ctx.fillStyle = '#FF6347';
+                ctx.fillRect(x + size * 0.1, y + size * 0.2, size * 0.2, size * 0.2);
+                ctx.fillRect(x + size * 0.7, y + size * 0.2, size * 0.2, size * 0.2);
+                
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(x + size * 0.3, y + size * 0.6, size * 0.4, size * 0.1);
+                
+                ctx.restore();
+            }
+            
+            drawCloud(x, y, width, height) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                
+                ctx.beginPath();
+                ctx.arc(x + width * 0.2, y + height * 0.5, height * 0.4, 0, Math.PI * 2);
+                ctx.arc(x + width * 0.5, y + height * 0.3, height * 0.5, 0, Math.PI * 2);
+                ctx.arc(x + width * 0.8, y + height * 0.5, height * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+            
+            drawBanana(x, y, size, rotation = 0) {
+                ctx.save();
+                ctx.translate(x + size/2, y + size/2);
+                ctx.rotate(rotation);
+                
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, size * 0.4, size * 0.8, 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#FFA500';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-size * 0.2, -size * 0.4);
+                ctx.lineTo(-size * 0.1, size * 0.4);
+                ctx.moveTo(0, -size * 0.5);
+                ctx.lineTo(0, size * 0.5);
+                ctx.moveTo(size * 0.2, -size * 0.4);
+                ctx.lineTo(size * 0.1, size * 0.4);
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            drawBird(x, y, width, height, animFrame, direction = 1) {
+                ctx.save();
+                
+                if (direction < 0) {
+                    ctx.scale(-1, 1);
+                    x = -x - width;
+                }
+                
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(x + width * 0.3, y + height * 0.4, width * 0.4, height * 0.3);
+                
+                const wingFlap = Math.sin(animFrame) * 0.3;
+                
+                ctx.fillStyle = '#A0522D';
+                ctx.save();
+                ctx.translate(x + width * 0.2, y + height * 0.5);
+                ctx.rotate(wingFlap);
+                ctx.fillRect(-width * 0.2, -height * 0.1, width * 0.3, height * 0.2);
+                ctx.restore();
+                
+                ctx.save();
+                ctx.translate(x + width * 0.8, y + height * 0.5);
+                ctx.rotate(-wingFlap);
+                ctx.fillRect(0, -height * 0.1, width * 0.3, height * 0.2);
+                ctx.restore();
+                
+                ctx.fillStyle = '#FFA500';
+                ctx.fillRect(x + width * 0.1, y + height * 0.45, width * 0.2, height * 0.1);
+                
+                ctx.restore();
+            }
+            
+            drawSodaOjisan(x, y, size) {
+                ctx.save();
+                
+                ctx.fillStyle = '#4169E1';
+                ctx.fillRect(x, y, size, size * 1.2);
+                
+                ctx.fillStyle = '#FFDBAC';
+                ctx.fillRect(x + size * 0.1, y - size * 0.3, size * 0.8, size * 0.6);
+                
+                ctx.fillStyle = '#000';
+                ctx.fillRect(x + size * 0.2, y - size * 0.1, size * 0.1, size * 0.1);
+                ctx.fillRect(x + size * 0.7, y - size * 0.1, size * 0.1, size * 0.1);
+                
+                ctx.fillStyle = '#FF0000';
+                ctx.fillRect(x + size * 0.3, y + size * 0.1, size * 0.4, size * 0.05);
+                
+                ctx.fillStyle = '#00CED1';
+                ctx.fillRect(x + size * 0.3, y - size * 0.8, size * 0.4, size * 0.6);
+                
+                ctx.restore();
+            }
+            
+            loop(currentTime = 0) {
+                if (this.gameState === 'playing') {
+                    const deltaTime = currentTime - this.lastTime;
+                    this.lastTime = currentTime;
+                    
+                    this.update(deltaTime);
+                }
+                
+                this.render();
+                
+                if (this.gameState === 'playing' || this.gameState === 'intro') {
+                    requestAnimationFrame((time) => this.loop(time));
+                }
+            }
+        }
+        
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        let game;
+        
+        function startGame() {
+            if (!game) {
+                game = new Game();
+                game.keys = keys;
+            }
+            game.start();
+        }
+        
+        function restartGame() {
+            if (game) {
+                game.restart();
+            }
+        }
+        
+        function initIntro() {
+            game = new Game();
+            game.keys = keys;
+            game.loop();
+        }
+        
+        window.addEventListener('load', initIntro);
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
