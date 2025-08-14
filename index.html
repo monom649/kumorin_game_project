@@ -1128,10 +1128,20 @@
                     console.log(`移動速度: ${moveSpeed} (ベース:${15} × 倍率:${this.speedMultiplier})`);
                 }
                 
-                // 画面内制限（左右）
-                if (this.player.x < 50) this.player.x = 50;
-                if (this.player.x > 1080 - this.player.width - 50) {
-                    this.player.x = 1080 - this.player.width - 50; // 1080 - 300 - 50 = 730
+                // 画面内制限（左右）- 左右対称に設定
+                const leftMargin = 20;  // 左端マージン（20px）
+                const rightMargin = 20; // 右端マージン（20px）
+                
+                if (this.player.x < leftMargin) {
+                    this.player.x = leftMargin;
+                }
+                if (this.player.x + this.player.width > 1080 - rightMargin) {
+                    this.player.x = 1080 - this.player.width - rightMargin;
+                }
+                
+                // デバッグ用：制限範囲をコンソールに出力（低頻度）
+                if (this.debugMode && Math.random() < 0.001) {
+                    console.log(`🎯 移動可能範囲: ${leftMargin} ≤ x ≤ ${1080 - this.player.width - rightMargin} (プレイヤー位置: ${this.player.x.toFixed(1)})`);
                 }
                 
                 // 画面内制限（上下）
