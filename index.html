@@ -111,11 +111,11 @@
 
         #kumorinIntro {
             position: absolute;
-            bottom: 500px; /* 画面中央付近 */
+            bottom: 600px; /* 画面中央付近（少し上に調整） */
             left: 50%;
             transform: translateX(-50%);
-            width: 400px;
-            height: 400px;
+            width: 150px; /* 適度なサイズに縮小 */
+            height: 150px;
             background-image: url('https://i.imgur.com/0hQMgso.gif');
             background-size: contain;
             background-repeat: no-repeat;
@@ -294,21 +294,21 @@
         /* アニメーション定義 */
         @keyframes slideUp {
             from { 
-                bottom: -1000px;
+                bottom: -250px;
             }
             to { 
-                bottom: -200px; /* ソーダおじさんの20%（200px）を画面下に隠す */
+                bottom: -50px; /* ソーダおじさんの20%（50px）を画面下に隠す */
             }
         }
 
         @keyframes flyAway {
             from { 
-                bottom: 500px;
+                bottom: 600px;
                 transform: translateX(-50%) scale(1);
                 opacity: 1;
             }
             to { 
-                bottom: 1110px; /* ゲーム開始位置と同じ高さ */
+                bottom: 1400px; /* 画面上部へ飛んでいく */
                 transform: translateX(-50%) scale(1);
                 opacity: 1;
             }
@@ -316,10 +316,10 @@
 
         @keyframes slideDown {
             from { 
-                bottom: -200px;
+                bottom: -50px;
             }
             to { 
-                bottom: -1000px; /* 元の位置まで下降 */
+                bottom: -250px; /* 元の位置まで下降 */
             }
         }
 
