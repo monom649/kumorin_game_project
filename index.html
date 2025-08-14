@@ -667,7 +667,7 @@
                 this.assets.banana.src = 'https://i.imgur.com/n4B27qz.jpg';
                 this.assets.cloud1.src = 'https://i.imgur.com/qY1JVuT.jpg';
                 this.assets.cloud2.src = 'https://i.imgur.com/0ybVRKX.jpg';
-                this.assets.meteorite.src = 'https://i.imgur.com/8cca641b-8a05-4af4-a01f-ef4fb50a7931';
+                this.assets.meteorite.src = 'https://i.imgur.com/8cca641.png'; // 修正されたURL
             }
 
             loadAudio() {
@@ -799,14 +799,22 @@
             }
 
             gameLoop() {
-                if (this.gameState !== 'playing') return;
-                
-                this.update();
-                this.draw();
-                
-                setTimeout(() => {
-                    this.gameLoop();
-                }, 33); // 30FPS
+                try {
+                    if (this.gameState !== 'playing') return;
+                    
+                    this.update();
+                    this.draw();
+                    
+                    setTimeout(() => {
+                        this.gameLoop();
+                    }, 33); // 30FPS
+                } catch (error) {
+                    console.error('ゲームループエラー:', error);
+                    // エラーが発生してもゲームを継続
+                    setTimeout(() => {
+                        this.gameLoop();
+                    }, 33);
+                }
             }
 
             update() {
@@ -1202,33 +1210,53 @@
                 
                 // 障害物描画（鳥と隕石）
                 this.obstacles.forEach(obstacle => {
-                    if (obstacle.type === 'bird') {
-                        const drawWidth = 200;
-                        const drawHeight = 200;
-                        
-                        this.ctx.save();
-                        if (obstacle.direction === 'left') {
-                            this.ctx.scale(-1, 1);
-                            this.ctx.drawImage(
-                                this.assets.bird,
-                                -(obstacle.x + drawWidth), obstacle.y,
-                                drawWidth, drawHeight
-                            );
-                        } else {
-                            this.ctx.drawImage(
-                                this.assets.bird,
-                                obstacle.x, obstacle.y,
-                                drawWidth, drawHeight
-                            );
+                    try {
+                        if (obstacle.type === 'bird') {
+                            const drawWidth = 200;
+                            const drawHeight = 200;
+                            
+                            if (this.assets.bird && this.assets.bird.complete) {
+                                this.ctx.save();
+                                if (obstacle.direction === 'left') {
+                                    this.ctx.scale(-1, 1);
+                                    this.ctx.drawImage(
+                                        this.assets.bird,
+                                        -(obstacle.x + drawWidth), obstacle.y,
+                                        drawWidth, drawHeight
+                                    );
+                                } else {
+                                    this.ctx.drawImage(
+                                        this.assets.bird,
+                                        obstacle.x, obstacle.y,
+                                        drawWidth, drawHeight
+                                    );
+                                }
+                                this.ctx.restore();
+                            }
+                        } else if (obstacle.type === 'meteorite') {
+                            // 隕石描画（安全性チェック付き）
+                            if (this.assets.meteorite && this.assets.meteorite.complete) {
+                                this.ctx.drawImage(
+                                    this.assets.meteorite,
+                                    obstacle.x, obstacle.y,
+                                    obstacle.width, obstacle.height
+                                );
+                            } else {
+                                // 隕石画像が読み込まれていない場合は円で代用
+                                this.ctx.fillStyle = '#8B4513';
+                                this.ctx.beginPath();
+                                this.ctx.arc(
+                                    obstacle.x + obstacle.width/2, 
+                                    obstacle.y + obstacle.height/2, 
+                                    obstacle.width/2, 
+                                    0, Math.PI * 2
+                                );
+                                this.ctx.fill();
+                            }
                         }
-                        this.ctx.restore();
-                    } else if (obstacle.type === 'meteorite') {
-                        // 隕石描画
-                        this.ctx.drawImage(
-                            this.assets.meteorite,
-                            obstacle.x, obstacle.y,
-                            obstacle.width, obstacle.height
-                        );
+                    } catch (error) {
+                        console.error('障害物描画エラー:', error, obstacle);
+                        // エラーが発生しても描画を続行
                     }
                 });
                 
