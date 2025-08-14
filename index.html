@@ -100,30 +100,31 @@
 
         #kumorinIntro {
             position: absolute;
-            bottom: 100px;
+            bottom: 500px; /* 画面中央付近 */
             left: 50%;
             transform: translateX(-50%);
-            width: 300px;
-            height: 300px;
+            width: 400px;
+            height: 400px;
             background-image: url('https://i.imgur.com/0hQMgso.gif');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
+            z-index: 3; /* ソーダおじさんより前面 */
         }
 
         #sodaOjisan {
             position: absolute;
-            bottom: -400px; /* 画面外から開始 */
+            bottom: -500px; /* 画面外から開始 */
             left: 50%;
             transform: translateX(-50%);
-            width: 300px;
-            height: 300px;
+            width: 500px; /* より大きく */
+            height: 500px;
             background-image: url('https://i.imgur.com/4aHLhwq.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            z-index: 2; /* くもりんより前面に */
-            /* デバッグ用の枠線 - 一時的に有効化 */
+            z-index: 2;
+            /* デバッグ用の枠線 */
             border: 2px solid red;
         }
 
@@ -270,26 +271,32 @@
         /* アニメーション定義 */
         @keyframes slideUp {
             from { 
-                transform: translateX(-50%) translateY(0); 
-                bottom: -400px;
+                bottom: -500px;
             }
             to { 
-                transform: translateX(-50%) translateY(0); 
-                bottom: 400px;
+                bottom: 500px; /* くもりんと同じ高さまで上昇 */
             }
         }
 
-        @keyframes flyUp {
-            from { transform: translateX(-50%) translateY(0); }
-            to { transform: translateX(-50%) translateY(-100vh); }
+        @keyframes flyAway {
+            from { 
+                bottom: 500px;
+                transform: translateX(-50%) scale(1);
+                opacity: 1;
+            }
+            to { 
+                bottom: 1500px; /* 画面上部へ飛んでいく */
+                transform: translateX(-50%) scale(0.5);
+                opacity: 0.8;
+            }
         }
 
         .soda-entrance {
-            animation: slideUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation: slideUp 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
 
         .kumorin-flyout {
-            animation: flyUp 1s ease-out forwards;
+            animation: flyAway 1.5s ease-out forwards;
         }
     </style>
 </head>
@@ -637,7 +644,7 @@
                     console.log('ソーダおじさんのスタイル:', window.getComputedStyle(soda).backgroundImage);
                 }
                 
-                // 1秒後にソーダおじさん登場
+                // 0.5秒後にソーダおじさん登場
                 setTimeout(() => {
                     if (soda) {
                         soda.classList.add('soda-entrance');
@@ -647,18 +654,18 @@
                     }
                     this.playAudio('soda'); // ソーダおじさん登場音
                     
-                    // 1秒後にくもりん飛び出し
+                    // 1.5秒後（ソーダおじさんが上まで来たタイミング）にくもりん飛び出し
                     setTimeout(() => {
                         const kumorin = document.getElementById('kumorinIntro');
                         kumorin.classList.add('kumorin-flyout');
                         this.playAudio('ohno'); // くもりん飛ばされる音
                         
-                        // 1秒後にゲーム開始
+                        // 1.5秒後にゲーム開始
                         setTimeout(() => {
                             this.startGame();
-                        }, 1000);
-                    }, 1000);
-                }, 1000);
+                        }, 1500);
+                    }, 1500);
+                }, 500);
             }
 
             startGame() {
