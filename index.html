@@ -635,7 +635,9 @@
                 });
 
                 // リトライボタン
-                document.getElementById('retryButton').addEventListener('click', () => {
+                document.getElementById('retryButton').addEventListener('click', async () => {
+                    // 音声解放を確実に実行
+                    await this.unlockAudio();
                     this.startGame();
                 });
 
@@ -1103,6 +1105,13 @@
                 document.getElementById('gameScreen').style.display = 'block';
                 document.getElementById('gameOverScreen').style.display = 'none';
                 
+                // くもりんを確実に表示
+                const kumorin = document.getElementById('kumorinPlayer');
+                if (kumorin) {
+                    kumorin.style.display = 'block';
+                    kumorin.classList.remove('kumorin-death');
+                }
+                
                 this.gameState = 'playing';
                 this.distance = 0;
                 this.bananaCount = 0;
@@ -1133,7 +1142,8 @@
                     speedGuide.style.fontSize = '28px';
                 }
                 
-                // ゲーム開始音とBGM
+                // ゲーム開始音とBGM（デバッグログ付き）
+                console.log('🎮 ゲーム開始 - 音声状態チェック:', this.audioUnlocked);
                 this.playAudio('gamestart');
                 this.playAudio('bgm');
                 
