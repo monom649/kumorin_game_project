@@ -463,8 +463,14 @@
                 this.scaleX = this.screenWidth / 1080;
                 this.scaleY = this.screenHeight / 1920;
                 
+                // UI要素用の統一スケールファクター（小さい方を使用してアスペクト比維持）
+                this.uiScale = Math.min(this.scaleX, this.scaleY);
+                
                 console.log(`📱 Screen: ${this.screenWidth}x${this.screenHeight}`);
-                console.log(`🎮 Scale: X=${this.scaleX.toFixed(3)} Y=${this.scaleY.toFixed(3)}`);
+                console.log(`🎮 Scale: X=${this.scaleX.toFixed(3)} Y=${this.scaleY.toFixed(3)} UI=${this.uiScale.toFixed(3)}`);
+                
+                // UI要素にスケールを適用
+                this.applyUIScaling();
                 
                 // 画面サイズ変更時の対応
                 const updateScreenSize = () => {
@@ -472,11 +478,82 @@
                     this.screenHeight = window.innerHeight;
                     this.scaleX = this.screenWidth / 1080;
                     this.scaleY = this.screenHeight / 1920;
+                    this.uiScale = Math.min(this.scaleX, this.scaleY);
+                    this.applyUIScaling();
                 };
                 
                 window.addEventListener('resize', updateScreenSize);
                 window.addEventListener('orientationchange', () => {
                     setTimeout(updateScreenSize, 100);
+                });
+            }
+            
+            applyUIScaling() {
+                // CSS変数でスケールファクターを設定
+                document.documentElement.style.setProperty('--scale-x', this.scaleX);
+                document.documentElement.style.setProperty('--scale-y', this.scaleY);
+                document.documentElement.style.setProperty('--ui-scale', this.uiScale);
+                
+                // 個別要素のスケーリング
+                const elementsToScale = [
+                    { id: 'kumorinGif', baseWidth: 500, baseHeight: 500 },
+                    { id: 'startButton', baseFontSize: 36 },
+                    { id: 'gyroPermissionScreen', baseFontSize: 48 },
+                    { id: 'distanceDisplay', baseFontSize: 48 },
+                    { id: 'bananaCounter', baseFontSize: 36 },
+                    { id: 'speedGuide', baseFontSize: 48 },
+                    { id: 'gameOverScreen', baseFontSize: 48 },
+                    { id: 'finalDistance', baseFontSize: 64 },
+                    { id: 'finalBananas', baseFontSize: 48 },
+                    { id: 'restartButton', baseFontSize: 36 }
+                ];
+                
+                elementsToScale.forEach(item => {
+                    const element = document.getElementById(item.id);
+                    if (element) {
+                        if (item.baseWidth && item.baseHeight) {
+                            element.style.width = (item.baseWidth * this.uiScale) + 'px';
+                            element.style.height = (item.baseHeight * this.uiScale) + 'px';
+                        }
+                        if (item.baseFontSize) {
+                            element.style.fontSize = (item.baseFontSize * this.uiScale) + 'px';
+                        }
+                    }
+                });
+                
+                // ジャイロ許可画面の子要素を個別にスケール
+                const gyroScreen = document.getElementById('gyroPermissionScreen');
+                if (gyroScreen) {
+                    const childDivs = gyroScreen.querySelectorAll('div');
+                    childDivs.forEach((div, index) => {
+                        if (index === 0) {
+                            div.style.fontSize = (48 * this.uiScale) + 'px';
+                            div.style.marginBottom = (60 * this.uiScale) + 'px';
+                        } else if (index === 1) {
+                            div.style.fontSize = (36 * this.uiScale) + 'px';
+                            div.style.marginBottom = (60 * this.uiScale) + 'px';
+                        }
+                    });
+                    
+                    const button = gyroScreen.querySelector('#gyroPermissionButton');
+                    if (button) {
+                        button.style.padding = `${30 * this.uiScale}px ${60 * this.uiScale}px`;
+                        button.style.fontSize = (40 * this.uiScale) + 'px';
+                        button.style.borderRadius = (20 * this.uiScale) + 'px';
+                    }
+                }
+                
+                // CSS クラスベースの要素をスケール
+                const bananaIcons = document.querySelectorAll('.banana-icon');
+                bananaIcons.forEach(icon => {
+                    icon.style.width = (80 * this.uiScale) + 'px';
+                    icon.style.height = (80 * this.uiScale) + 'px';
+                });
+                
+                const bananaInlines = document.querySelectorAll('.banana-inline');
+                bananaInlines.forEach(icon => {
+                    icon.style.width = (57 * this.uiScale) + 'px';
+                    icon.style.height = (57 * this.uiScale) + 'px';
                 });
             }
 
