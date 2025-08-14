@@ -238,20 +238,6 @@
             display: none;
         }
 
-        #testModeButton {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 20px 30px; /* 10px×2.0, 15px×2.0 */
-            border-radius: 10px; /* 5px × 2.0 = 10px */
-            font-size: 24px; /* 12px × 2.0 = 24px */
-            font-family: 'Panda Bakery', Arial, sans-serif;
-            cursor: pointer;
-            z-index: 100;
-        }
 
         .banana-icon {
             width: 80px; /* 40px × 2.0 = 80px */
@@ -344,7 +330,6 @@
     <div class="game-container" id="gameContainer">
         <!-- タイトル画面 -->
         <div id="titleScreen">
-            <button id="testModeButton">🔧 テストモード</button>
             <div id="kumorinGif"></div>
             <button id="startButton">スタート</button>
         </div>
@@ -499,11 +484,6 @@
                 // タイトルボタン
                 document.getElementById('titleButton').addEventListener('click', () => {
                     this.showTitleScreen();
-                });
-
-                // テストモードボタン
-                document.getElementById('testModeButton').addEventListener('click', () => {
-                    this.enterTestMode();
                 });
 
                 // 固定サイズなのでリサイズイベントは不要
@@ -1391,31 +1371,6 @@
                 }
             }
 
-            enterTestMode() {
-                this.debugMode = true;
-                document.getElementById('debugInfo').style.display = 'block';
-                
-                alert(`🔧 テストモード開始
-
-iOS 26 Beta対応テスト:
-1. ジャイロセンサー複数回試行
-2. DeviceMotionEvent代替
-3. 詳細ログ表示
-
-User Agent: ${navigator.userAgent.substring(0, 100)}...
-Protocol: ${location.protocol}
-DeviceOrientationEvent: ${typeof DeviceOrientationEvent}
-requestPermission: ${typeof DeviceOrientationEvent.requestPermission}`);
-                
-                console.log('=== テストモード詳細情報 ===');
-                console.log('User Agent:', navigator.userAgent);
-                console.log('Location:', location.href);
-                console.log('Protocol:', location.protocol);
-                console.log('DeviceOrientationEvent:', typeof DeviceOrientationEvent);
-                console.log('requestPermission:', typeof DeviceOrientationEvent.requestPermission);
-                
-                this.requestGyroPermission();
-            }
         }
 
         // ゲーム開始
