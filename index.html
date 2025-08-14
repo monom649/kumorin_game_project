@@ -156,14 +156,20 @@
         /* ゲーム中のくもりんGIF */
         #kumorinPlayer {
             position: absolute;
-            width: 120px; /* 300px × 40% = 120px */
-            height: 120px;
+            width: 300px; /* ゲームプレイ時は元のサイズ */
+            height: 300px;
             background-image: url('https://i.imgur.com/0hQMgso.gif');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             pointer-events: none;
             z-index: 5;
+        }
+
+        /* 導入シーン中はくもりんを小さく */
+        #introScreen #kumorinPlayer {
+            width: 120px; /* 300px × 40% = 120px */
+            height: 120px;
         }
 
         /* UI要素 */
@@ -208,7 +214,7 @@
             top: 150px; /* 距離表示の下 */
             left: 50%;
             transform: translateX(-50%);
-            font-size: 48px; /* 32px × 1.5 = 48px */
+            font-size: 48px; /* デフォルト、JSで上書きされる */
             font-weight: bold;
             color: #ffff00;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
@@ -426,8 +432,8 @@
                 this.player = {
                     x: 0,
                     y: 0,
-                    width: 120, /* 300 × 40% = 120 */
-                    height: 120,
+                    width: 300, /* ゲームプレイ時は元のサイズ */
+                    height: 300,
                     img: new Image(),
                     element: document.getElementById('kumorinPlayer')
                 };
@@ -517,6 +523,7 @@
                 const speedGuide = document.getElementById('speedGuide');
                 if (speedGuide) {
                     speedGuide.style.fontSize = '14px';  // さらに小さく
+                    speedGuide.style.setProperty('font-size', '14px', 'important'); // CSSを上書き
                 }
                 
                 // ジャイロ許可画面
