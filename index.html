@@ -653,7 +653,7 @@
                     }
                     this.playAudio('soda'); // ソーダおじさん登場音
                     
-                    // 1.5秒後（ソーダおじさんが上まで来たタイミング）にくもりん飛び出し
+                    // 1.0秒後（ソーダおじさんの停止と同時）にくもりん飛び出し
                     setTimeout(() => {
                         const kumorin = document.getElementById('kumorinIntro');
                         kumorin.classList.add('kumorin-flyout');
@@ -663,7 +663,7 @@
                         setTimeout(() => {
                             this.startGame();
                         }, 1500);
-                    }, 1500);
+                    }, 1000);
                 }, 500);
             }
 
