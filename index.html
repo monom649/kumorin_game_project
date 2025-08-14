@@ -383,6 +383,9 @@
         <div id="gameOverScreen">
             <h1>ゲームオーバー</h1>
             <div id="finalDistance">0m</div>
+            <div style="font-size: 48px; color: #ffff00; margin: 20px 0;">
+                🍌 × <span id="finalBananas">0</span>
+            </div>
             <button class="button" id="retryButton">もう一度プレイ</button>
             <button class="button" id="shareButton">結果をシェア</button>
             <button class="button" id="titleButton">タイトルに戻る</button>
@@ -1067,10 +1070,10 @@
                 
                 if (Math.floor(this.distance) % 100 === 0 && Math.random() < bananaChance) {
                     this.bananas.push({
-                        x: Math.random() * (1080 - 300), // 1080 - 300 = 780
+                        x: Math.random() * (1080 - 210), // 1080 - 210 = 870（30%縮小後のサイズ）
                         y: -300,
-                        width: 300,
-                        height: 300,
+                        width: 210, // 300 × 0.7 = 210（30%縮小）
+                        height: 210, // 300 × 0.7 = 210（30%縮小）
                         speed: 3 * this.speedMultiplier
                     });
                 }
@@ -1160,20 +1163,23 @@
             }
 
             collectBanana() {
-                this.bananaCount = Math.min(5, this.bananaCount + 1);
+                this.bananaCount++;
                 
-                // スピードアップ段階（0個:1.0倍, 1個:1.4倍, 2個:1.8倍, 3個:2.2倍, 4個:2.6倍, 5個:3.0倍）
+                // スピードアップ段階（0個:1.0倍, 1個:1.4倍, 2個:1.8倍, 3個:2.2倍, 4個:2.6倍, 5個以上:3.0倍）
                 const speedLevels = [1.0, 1.4, 1.8, 2.2, 2.6, 3.0];
-                this.speedMultiplier = speedLevels[this.bananaCount];
+                const speedIndex = Math.min(this.bananaCount, speedLevels.length - 1);
+                this.speedMultiplier = speedLevels[speedIndex];
                 
-                console.log(`🍌 バナナ取得! カウント: ${this.bananaCount}/5, スピード倍率: ×${this.speedMultiplier}`);
+                console.log(`🍌 バナナ取得! カウント: ${this.bananaCount}, スピード倍率: ×${this.speedMultiplier}`);
                 console.log(`⬆️ スピードアップ! 現在の移動速度: ${15 * this.speedMultiplier} (ベース:15 × ${this.speedMultiplier})`);
                 
                 // バナナ取得音
                 this.playAudio('item');
                 
-                // スピードアップの視覚的フィードバック
-                this.showSpeedUpEffect();
+                // スピードアップの視覚的フィードバック（5個まで）
+                if (this.bananaCount <= 5) {
+                    this.showSpeedUpEffect();
+                }
             }
 
             updateBananaCounter() {
@@ -1187,7 +1193,7 @@
                         // バナナ1-4個：LV表示
                         speedGuide.innerHTML = `LV${this.bananaCount}`;
                     } else {
-                        // バナナ5個：MAX表示
+                        // バナナ5個以上：MAX表示
                         speedGuide.innerHTML = 'MAX';
                         speedGuide.style.color = '#ff0000'; // 赤色で強調
                         speedGuide.style.textShadow = '0 0 10px #ffff00'; // 光らせる
@@ -1239,7 +1245,14 @@
                 element.style.pointerEvents = 'none';
                 
                 if (type === 'bird') {
-                    element.style.backgroundImage = "url('https://i.imgur.com/OjHmClD.gif')";
+                    // 方向に応じて異なるGIFを使用
+                    if (direction === 'left') {
+                        // 左から右へ移動（右向きの鳥）
+                        element.style.backgroundImage = "url('https://i.imgur.com/OjHmClD.gif')";
+                    } else {
+                        // 右から左へ移動（左向きの鳥）
+                        element.style.backgroundImage = "url('https://i.imgur.com/HpSqxQ3.gif')";
+                    }
                 } else if (type === 'meteorite') {
                     element.style.backgroundImage = "url('https://i.imgur.com/qHUcJgE.gif')";
                 }
@@ -1339,6 +1352,7 @@
                 }, 500);
                 
                 document.getElementById('finalDistance').textContent = Math.floor(this.distance) + 'm';
+                document.getElementById('finalBananas').textContent = this.bananaCount;
                 document.getElementById('gameOverScreen').style.display = 'flex';
             }
 
