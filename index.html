@@ -1076,7 +1076,7 @@
                 if (speedGuide) {
                     speedGuide.style.color = '#ffff00';
                     speedGuide.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
-                    speedGuide.style.fontSize = '48px';
+                    speedGuide.style.fontSize = '28px';
                 }
                 
                 // ゲーム開始音とBGM
@@ -1722,12 +1722,12 @@
                 // スピードアップエフェクトでスピードガイド表示を一時的に大きくする
                 const speedGuide = document.getElementById('speedGuide');
                 if (speedGuide) {
-                    speedGuide.style.fontSize = '72px'; /* 48px × 1.5 = 72px */
+                    speedGuide.style.fontSize = '42px'; /* 28px × 1.5 = 42px */
                     speedGuide.style.color = '#ff0000';
                     speedGuide.style.textShadow = '0 0 10px #ffff00';
                     
                     setTimeout(() => {
-                        speedGuide.style.fontSize = '48px';
+                        speedGuide.style.fontSize = '28px';
                         // MAXの場合は赤色を維持、そうでなければ黄色に戻す
                         if (this.bananaCount < 5) {
                             speedGuide.style.color = '#ffff00';
