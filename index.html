@@ -421,6 +421,7 @@
                 this.clouds = [];
                 this.bananas = [];
                 this.stars = []; // 宇宙空間の星々
+                this.obstacleElements = []; // HTML要素での障害物表示用
                 
                 // ジャイロセンサー
                 this.gyroData = { alpha: 0, beta: 0, gamma: 0 };
@@ -668,6 +669,14 @@
                 this.assets.cloud1.src = 'https://i.imgur.com/qY1JVuT.jpg';
                 this.assets.cloud2.src = 'https://i.imgur.com/0ybVRKX.jpg';
                 this.assets.meteorite.src = 'https://i.imgur.com/qHUcJgE.gif'; // 新しい隕石GIF (450x460)
+                
+                // GIFアニメーション確認用ログ
+                this.assets.bird.onload = () => {
+                    console.log('🐦 鳥GIF読み込み完了');
+                };
+                this.assets.meteorite.onload = () => {
+                    console.log('☄️ 隕石GIF読み込み完了');
+                };
             }
 
             loadAudio() {
@@ -782,6 +791,12 @@
                 this.clouds = [];
                 this.bananas = [];
                 this.stars = [];
+                
+                // HTML要素障害物をクリア
+                this.obstacleElements.forEach(obstacle => {
+                    obstacle.element.remove();
+                });
+                this.obstacleElements = [];
                 
                 // スピードガイドを初期状態に戻す
                 const speedGuide = document.getElementById('speedGuide');
@@ -1019,15 +1034,7 @@
                     if (this.distance >= 5000) birdSpeed = 6;
                     if (this.distance >= 10000) birdSpeed = 7;
                     
-                    this.obstacles.push({
-                        x: startX,
-                        y: y,
-                        width: 180, // 550pxを適度に縮小
-                        height: 156, // 480pxを適度に縮小（比率維持）
-                        type: 'bird',
-                        direction: direction,
-                        speed: birdSpeed * this.speedMultiplier
-                    });
+                    this.createObstacleElement('bird', startX, y, 180, 156, direction, birdSpeed * this.speedMultiplier);
                 }
                 
                 // 隕石の生成
@@ -1040,15 +1047,7 @@
                     let meteoriteSpeed = 7.5; // 基本速度 5 × 1.5 = 7.5
                     if (this.distance >= 10000) meteoriteSpeed = 10.5; // 7 × 1.5 = 10.5
                     
-                    this.obstacles.push({
-                        x: x,
-                        y: y,
-                        width: 140, // 450pxを適度に縮小
-                        height: 143, // 460pxを適度に縮小（比率維持）
-                        type: 'meteorite',
-                        direction: 'down', // 垂直落下
-                        speed: meteoriteSpeed * this.speedMultiplier
-                    });
+                    this.createObstacleElement('meteorite', x, y, 140, 143, 'down', meteoriteSpeed * this.speedMultiplier);
                     
                     if (this.debugMode) {
                         console.log(`隕石生成: x=${x}, speed=${meteoriteSpeed * this.speedMultiplier}`);
@@ -1084,23 +1083,32 @@
                     return cloud.y < 1920 + 200; // 1920 + 200 = 2120
                 });
                 
-                // 障害物の更新（鳥と隕石）
-                this.obstacles = this.obstacles.filter(obstacle => {
+                // HTML要素障害物の更新
+                this.obstacleElements = this.obstacleElements.filter(obstacle => {
                     if (obstacle.type === 'bird') {
                         // 鳥の左右移動
                         if (obstacle.direction === 'left') {
                             obstacle.x += obstacle.speed;
-                            return obstacle.x < 1080 + 400;
                         } else {
                             obstacle.x -= obstacle.speed;
-                            return obstacle.x > -400;
+                        }
+                        obstacle.element.style.left = obstacle.x + 'px';
+                        
+                        if (obstacle.x < -400 || obstacle.x > 1080 + 400) {
+                            obstacle.element.remove();
+                            return false;
                         }
                     } else if (obstacle.type === 'meteorite') {
                         // 隕石の垂直落下
                         obstacle.y += obstacle.speed;
-                        return obstacle.y < 1920 + 200;
+                        obstacle.element.style.top = obstacle.y + 'px';
+                        
+                        if (obstacle.y > 1920 + 200) {
+                            obstacle.element.remove();
+                            return false;
+                        }
                     }
-                    return false;
+                    return true;
                 });
                 
                 // バナナの更新
@@ -1122,8 +1130,8 @@
             }
 
             checkCollisions() {
-                // 障害物との衝突
-                for (let obstacle of this.obstacles) {
+                // HTML要素障害物との衝突
+                for (let obstacle of this.obstacleElements) {
                     if (this.isColliding(this.player, obstacle)) {
                         this.gameOver();
                         return;
@@ -1208,54 +1216,7 @@
                 
                 // プレイヤー描画はHTML要素で行うため、ここでは描画しない
                 
-                // 障害物描画（鳥と隕石）
-                this.obstacles.forEach(obstacle => {
-                    try {
-                        if (obstacle.type === 'bird') {
-                            if (this.assets.bird && this.assets.bird.complete) {
-                                this.ctx.save();
-                                if (obstacle.direction === 'left') {
-                                    this.ctx.scale(-1, 1);
-                                    this.ctx.drawImage(
-                                        this.assets.bird,
-                                        -(obstacle.x + obstacle.width), obstacle.y,
-                                        obstacle.width, obstacle.height
-                                    );
-                                } else {
-                                    this.ctx.drawImage(
-                                        this.assets.bird,
-                                        obstacle.x, obstacle.y,
-                                        obstacle.width, obstacle.height
-                                    );
-                                }
-                                this.ctx.restore();
-                            }
-                        } else if (obstacle.type === 'meteorite') {
-                            // 隕石描画（安全性チェック付き）
-                            if (this.assets.meteorite && this.assets.meteorite.complete) {
-                                this.ctx.drawImage(
-                                    this.assets.meteorite,
-                                    obstacle.x, obstacle.y,
-                                    obstacle.width, obstacle.height
-                                );
-                            } else {
-                                // 隕石画像が読み込まれていない場合は円で代用
-                                this.ctx.fillStyle = '#8B4513';
-                                this.ctx.beginPath();
-                                this.ctx.arc(
-                                    obstacle.x + obstacle.width/2, 
-                                    obstacle.y + obstacle.height/2, 
-                                    obstacle.width/2, 
-                                    0, Math.PI * 2
-                                );
-                                this.ctx.fill();
-                            }
-                        }
-                    } catch (error) {
-                        console.error('障害物描画エラー:', error, obstacle);
-                        // エラーが発生しても描画を続行
-                    }
-                });
+                // 障害物はHTML要素で描画するため、ここでは何もしない
                 
                 // バナナ描画
                 this.bananas.forEach(banana => {
@@ -1264,6 +1225,40 @@
                         banana.x, banana.y,
                         banana.width, banana.height
                     );
+                });
+            }
+
+            createObstacleElement(type, x, y, width, height, direction, speed) {
+                const element = document.createElement('div');
+                element.style.position = 'absolute';
+                element.style.left = x + 'px';
+                element.style.top = y + 'px';
+                element.style.width = width + 'px';
+                element.style.height = height + 'px';
+                element.style.zIndex = '4';
+                element.style.pointerEvents = 'none';
+                
+                if (type === 'bird') {
+                    element.style.backgroundImage = "url('https://i.imgur.com/OjHmClD.gif')";
+                } else if (type === 'meteorite') {
+                    element.style.backgroundImage = "url('https://i.imgur.com/qHUcJgE.gif')";
+                }
+                
+                element.style.backgroundSize = 'contain';
+                element.style.backgroundRepeat = 'no-repeat';
+                element.style.backgroundPosition = 'center';
+                
+                document.getElementById('gameScreen').appendChild(element);
+                
+                this.obstacleElements.push({
+                    element: element,
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height,
+                    type: type,
+                    direction: direction,
+                    speed: speed
                 });
             }
 
