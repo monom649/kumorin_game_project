@@ -34,13 +34,11 @@
 
         /* ゲームコンテナ: 縦1920×横1080の縦向きゲーム */
         .game-container {
-            width: 1080px;
-            height: 1920px;
+            width: 100vw;
+            height: 100vh;
             position: relative;
-            transform-origin: center;
             background: #000;
-            overflow: hidden; /* 重要: はみ出し部分を隠す */
-            box-shadow: 0 0 50px rgba(255,255,255,0.2); /* コンテナの境界を視覚化 */
+            overflow: hidden;
         }
 
         /* 縦向き固定 */
@@ -458,68 +456,33 @@
             }
 
             setupScreenScale() {
-                const container = document.getElementById('gameContainer');
-                const targetWidth = 1080;  // ゲームの横幅
-                const targetHeight = 1920; // ゲームの縦幅
+                // 画面全体を使用するため、スケーリングは不要
+                // ゲーム座標系は1080×1920を維持し、実際の画面サイズに適応
+                this.screenWidth = window.innerWidth;
+                this.screenHeight = window.innerHeight;
+                this.scaleX = this.screenWidth / 1080;
+                this.scaleY = this.screenHeight / 1920;
                 
-                const updateScale = () => {
-                    const screenWidth = window.innerWidth;
-                    const screenHeight = window.innerHeight;
-                    
-                    // モバイルデバイスの判定
-                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                    
-                    let scale;
-                    
-                    if (isMobile) {
-                        // モバイルでは常に画面幅に合わせる（縦向きゲームの場合）
-                        const widthScale = screenWidth / targetWidth;
-                        const heightScale = screenHeight / targetHeight;
-                        
-                        // より大きなスケールを使用して画面を最大限活用
-                        scale = Math.max(widthScale, heightScale);
-                        
-                        // ただし、はみ出す場合は小さい方を使用
-                        if (targetWidth * scale > screenWidth || targetHeight * scale > screenHeight) {
-                            scale = Math.min(widthScale, heightScale);
-                        }
-                    } else {
-                        // デスクトップでは従来通り
-                        const screenAspect = screenWidth / screenHeight;
-                        const gameAspect = targetWidth / targetHeight;
-                        
-                        if (screenAspect > gameAspect) {
-                            scale = screenHeight / targetHeight;
-                        } else {
-                            scale = screenWidth / targetWidth;
-                        }
-                    }
-                    
-                    // スケールを適用
-                    container.style.transform = `scale(${scale})`;
-                    container.style.transformOrigin = 'center center';
-                    
-                    const finalWidth = targetWidth * scale;
-                    const finalHeight = targetHeight * scale;
-                    
-                    console.log(`📱 Device: ${isMobile ? 'Mobile' : 'Desktop'}`);
-                    console.log(`📱 Screen: ${screenWidth}x${screenHeight}`);
-                    console.log(`🎮 Game: ${targetWidth}x${targetHeight}`);
-                    console.log(`✅ Scale: ${scale.toFixed(3)}`);
-                    console.log(`📏 Final: ${finalWidth.toFixed(0)}x${finalHeight.toFixed(0)}`);
-                    console.log(`📊 Usage: W${(finalWidth/screenWidth*100).toFixed(1)}% H${(finalHeight/screenHeight*100).toFixed(1)}%`);
+                console.log(`📱 Screen: ${this.screenWidth}x${this.screenHeight}`);
+                console.log(`🎮 Scale: X=${this.scaleX.toFixed(3)} Y=${this.scaleY.toFixed(3)}`);
+                
+                // 画面サイズ変更時の対応
+                const updateScreenSize = () => {
+                    this.screenWidth = window.innerWidth;
+                    this.screenHeight = window.innerHeight;
+                    this.scaleX = this.screenWidth / 1080;
+                    this.scaleY = this.screenHeight / 1920;
                 };
                 
-                updateScale();
-                window.addEventListener('resize', updateScale);
+                window.addEventListener('resize', updateScreenSize);
                 window.addEventListener('orientationchange', () => {
-                    setTimeout(updateScale, 100);
+                    setTimeout(updateScreenSize, 100);
                 });
             }
 
             setupCanvas() {
-                this.canvas.width = 1080;
-                this.canvas.height = 1920;
+                this.canvas.width = this.screenWidth;
+                this.canvas.height = this.screenHeight;
             }
 
             setupEventListeners() {
@@ -1183,8 +1146,10 @@
 
             updatePlayerPosition() {
                 if (this.player.element) {
-                    this.player.element.style.left = this.player.x + 'px';
-                    this.player.element.style.top = this.player.y + 'px';
+                    this.player.element.style.left = (this.player.x * this.scaleX) + 'px';
+                    this.player.element.style.top = (this.player.y * this.scaleY) + 'px';
+                    this.player.element.style.width = (this.player.width * this.scaleX) + 'px';
+                    this.player.element.style.height = (this.player.height * this.scaleY) + 'px';
                 }
             }
 
@@ -1307,7 +1272,7 @@
                         } else {
                             obstacle.x -= obstacle.speed;
                         }
-                        obstacle.element.style.left = obstacle.x + 'px';
+                        obstacle.element.style.left = (obstacle.x * this.scaleX) + 'px';
                         
                         if (obstacle.x < -400 || obstacle.x > 1080 + 400) {
                             obstacle.element.remove();
@@ -1316,7 +1281,7 @@
                     } else if (obstacle.type === 'meteorite') {
                         // 隕石の垂直落下
                         obstacle.y += obstacle.speed;
-                        obstacle.element.style.top = obstacle.y + 'px';
+                        obstacle.element.style.top = (obstacle.y * this.scaleY) + 'px';
                         
                         if (obstacle.y > 1920 + 200) {
                             obstacle.element.remove();
@@ -1423,7 +1388,11 @@
 
             draw() {
                 // キャンバスクリア
-                this.ctx.clearRect(0, 0, 1080, 1920);
+                this.ctx.clearRect(0, 0, this.screenWidth, this.screenHeight);
+                
+                // スケーリング適用
+                this.ctx.save();
+                this.ctx.scale(this.scaleX, this.scaleY);
                 
                 // 距離に応じた背景変化
                 this.drawBackground();
@@ -1444,15 +1413,18 @@
                         banana.width, banana.height
                     );
                 });
+                
+                // スケーリング復元
+                this.ctx.restore();
             }
 
             createObstacleElement(type, x, y, width, height, direction, speed) {
                 const element = document.createElement('div');
                 element.style.position = 'absolute';
-                element.style.left = x + 'px';
-                element.style.top = y + 'px';
-                element.style.width = width + 'px';
-                element.style.height = height + 'px';
+                element.style.left = (x * this.scaleX) + 'px';
+                element.style.top = (y * this.scaleY) + 'px';
+                element.style.width = (width * this.scaleX) + 'px';
+                element.style.height = (height * this.scaleY) + 'px';
                 element.style.zIndex = '4';
                 element.style.pointerEvents = 'none';
                 
