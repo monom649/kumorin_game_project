@@ -466,29 +466,48 @@
                     const screenWidth = window.innerWidth;
                     const screenHeight = window.innerHeight;
                     
-                    // 縦向きゲーム用のスケーリング：画面いっぱいに表示
+                    // モバイルデバイスの判定
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    
                     let scale;
                     
-                    // 横幅基準でスケールを計算（画面の横幅いっぱいに表示）
-                    scale = screenWidth / targetWidth;
-                    
-                    // ただし、高さが画面からはみ出る場合は高さ基準に変更
-                    const scaledHeight = targetHeight * scale;
-                    if (scaledHeight > screenHeight) {
-                        scale = screenHeight / targetHeight;
+                    if (isMobile) {
+                        // モバイルでは常に画面幅に合わせる（縦向きゲームの場合）
+                        const widthScale = screenWidth / targetWidth;
+                        const heightScale = screenHeight / targetHeight;
+                        
+                        // より大きなスケールを使用して画面を最大限活用
+                        scale = Math.max(widthScale, heightScale);
+                        
+                        // ただし、はみ出す場合は小さい方を使用
+                        if (targetWidth * scale > screenWidth || targetHeight * scale > screenHeight) {
+                            scale = Math.min(widthScale, heightScale);
+                        }
+                    } else {
+                        // デスクトップでは従来通り
+                        const screenAspect = screenWidth / screenHeight;
+                        const gameAspect = targetWidth / targetHeight;
+                        
+                        if (screenAspect > gameAspect) {
+                            scale = screenHeight / targetHeight;
+                        } else {
+                            scale = screenWidth / targetWidth;
+                        }
                     }
                     
                     // スケールを適用
                     container.style.transform = `scale(${scale})`;
+                    container.style.transformOrigin = 'center center';
                     
                     const finalWidth = targetWidth * scale;
                     const finalHeight = targetHeight * scale;
                     
+                    console.log(`📱 Device: ${isMobile ? 'Mobile' : 'Desktop'}`);
                     console.log(`📱 Screen: ${screenWidth}x${screenHeight}`);
-                    console.log(`🎮 Game Target: ${targetWidth}x${targetHeight}`);
+                    console.log(`🎮 Game: ${targetWidth}x${targetHeight}`);
                     console.log(`✅ Scale: ${scale.toFixed(3)}`);
-                    console.log(`📏 Final Size: ${finalWidth.toFixed(0)}x${finalHeight.toFixed(0)}`);
-                    console.log(`📊 Coverage: 横${(finalWidth/screenWidth*100).toFixed(1)}% 縦${(finalHeight/screenHeight*100).toFixed(1)}%`);
+                    console.log(`📏 Final: ${finalWidth.toFixed(0)}x${finalHeight.toFixed(0)}`);
+                    console.log(`📊 Usage: W${(finalWidth/screenWidth*100).toFixed(1)}% H${(finalHeight/screenHeight*100).toFixed(1)}%`);
                 };
                 
                 updateScale();
