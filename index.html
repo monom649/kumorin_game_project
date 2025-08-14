@@ -111,7 +111,7 @@
 
         #kumorinIntro {
             position: absolute;
-            bottom: 600px; /* 画面中央付近（少し上に調整） */
+            bottom: 400px; /* 画面中央付近（下げる） */
             left: 50%;
             transform: translateX(-50%);
             width: 150px; /* 適度なサイズに縮小 */
@@ -125,11 +125,11 @@
 
         #sodaOjisan {
             position: absolute;
-            bottom: -250px; /* サイズに合わせて調整 */
+            bottom: -400px; /* 400pxサイズに合わせて調整 */
             left: 50%;
             transform: translateX(-50%);
-            width: 250px; /* さらに小さく（画面に収める） */
-            height: 250px;
+            width: 400px; /* 元のサイズに戻す */
+            height: 400px;
             background-image: url('https://i.imgur.com/4aHLhwq.png');
             background-size: contain;
             background-repeat: no-repeat;
@@ -294,16 +294,16 @@
         /* アニメーション定義 */
         @keyframes slideUp {
             from { 
-                bottom: -250px;
+                bottom: -400px;
             }
             to { 
-                bottom: -50px; /* ソーダおじさんの20%（50px）を画面下に隠す */
+                bottom: -80px; /* ソーダおじさんの20%（80px）を画面下に隠す */
             }
         }
 
         @keyframes flyAway {
             from { 
-                bottom: 600px;
+                bottom: 400px;
                 transform: translateX(-50%) scale(1);
                 opacity: 1;
             }
@@ -316,10 +316,10 @@
 
         @keyframes slideDown {
             from { 
-                bottom: -50px;
+                bottom: -80px;
             }
             to { 
-                bottom: -250px; /* 元の位置まで下降 */
+                bottom: -400px; /* 元の位置まで下降 */
             }
         }
 
