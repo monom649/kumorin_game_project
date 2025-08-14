@@ -912,6 +912,7 @@
             }
 
             async unlockAudio() {
+                console.log('🔓 unlockAudio() 開始 - 現在の状態:', this.audioUnlocked);
                 if (!this.audioUnlocked) {
                     try {
                         // Web Audio APIを使用してコンテキストを作成・開始
@@ -956,16 +957,19 @@
                         }
                         
                         this.audioUnlocked = true;
-                        console.log('🔓 音声コンテキスト解放完了 (WebAudio)');
+                        console.log('🔓 音声コンテキスト解放完了 (WebAudio) - audioUnlocked:', this.audioUnlocked);
                         
                     } catch (error) {
                         console.error('音声解放エラー:', error);
                     }
+                } else {
+                    console.log('🔓 音声は既に解放済み - audioUnlocked:', this.audioUnlocked);
                 }
             }
 
             playAudio(audioName) {
                 try {
+                    console.log(`🎵 playAudio(${audioName}) 呼び出し - audioUnlocked: ${this.audioUnlocked}`);
                     if (!this.audioUnlocked) {
                         console.log('🔒 音声がまだ解放されていません');
                         return;
