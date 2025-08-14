@@ -468,19 +468,17 @@
                     const screenHeight = window.innerHeight;
                     const screenRatio = screenWidth / screenHeight;
                     
-                    let scale;
-                    if (screenRatio > targetRatio) {
-                        // 画面が横に広い場合（iPadなど）、高さに合わせる
-                        scale = screenHeight / targetHeight;
-                    } else {
-                        // 画面が縦に長い場合（iPhoneなど）、幅に合わせる
-                        scale = screenWidth / targetWidth;
-                    }
+                    // スケールを幅と高さの両方で計算して、小さい方を採用（画面に収まるように）
+                    const scaleByWidth = screenWidth / targetWidth;   // 幅ベース
+                    const scaleByHeight = screenHeight / targetHeight; // 高さベース
+                    const scale = Math.min(scaleByWidth, scaleByHeight); // 小さい方を採用
                     
                     // スケールを適用（bodyのflexboxでセンタリングされるので translate不要）
                     container.style.transform = `scale(${scale})`;
                     
-                    console.log(`📱 Screen: ${screenWidth}x${screenHeight}, Scale: ${scale.toFixed(3)}, Ratio: ${screenRatio.toFixed(3)}`);
+                    console.log(`📱 Screen: ${screenWidth}x${screenHeight}`);
+                    console.log(`📏 Scale候補: 幅=${scaleByWidth.toFixed(3)}, 高さ=${scaleByHeight.toFixed(3)}`);
+                    console.log(`✅ 採用Scale: ${scale.toFixed(3)}, 表示サイズ: ${(targetWidth * scale).toFixed(0)}x${(targetHeight * scale).toFixed(0)}`);
                 };
                 
                 updateScale();
