@@ -489,71 +489,93 @@
             }
             
             applyUIScaling() {
-                // CSS変数でスケールファクターを設定
-                document.documentElement.style.setProperty('--scale-x', this.scaleX);
-                document.documentElement.style.setProperty('--scale-y', this.scaleY);
-                document.documentElement.style.setProperty('--ui-scale', this.uiScale);
+                // 適切なバランスでUI要素をスケーリング
+                const scale = this.uiScale;
                 
-                // 個別要素のスケーリング
-                const elementsToScale = [
-                    { id: 'kumorinGif', baseWidth: 500, baseHeight: 500 },
-                    { id: 'startButton', baseFontSize: 36 },
-                    { id: 'gyroPermissionScreen', baseFontSize: 48 },
-                    { id: 'distanceDisplay', baseFontSize: 48 },
-                    { id: 'bananaCounter', baseFontSize: 36 },
-                    { id: 'speedGuide', baseFontSize: 48 },
-                    { id: 'gameOverScreen', baseFontSize: 48 },
-                    { id: 'finalDistance', baseFontSize: 64 },
-                    { id: 'finalBananas', baseFontSize: 48 },
-                    { id: 'restartButton', baseFontSize: 36 }
-                ];
+                // タイトル画面要素
+                const kumorinGif = document.getElementById('kumorinGif');
+                if (kumorinGif) {
+                    kumorinGif.style.width = (300 * scale) + 'px';  // 適度なサイズ
+                    kumorinGif.style.height = (300 * scale) + 'px';
+                }
                 
-                elementsToScale.forEach(item => {
-                    const element = document.getElementById(item.id);
-                    if (element) {
-                        if (item.baseWidth && item.baseHeight) {
-                            element.style.width = (item.baseWidth * this.uiScale) + 'px';
-                            element.style.height = (item.baseHeight * this.uiScale) + 'px';
-                        }
-                        if (item.baseFontSize) {
-                            element.style.fontSize = (item.baseFontSize * this.uiScale) + 'px';
-                        }
-                    }
-                });
+                const startButton = document.getElementById('startButton');
+                if (startButton) {
+                    startButton.style.fontSize = (52 * scale) + 'px';  // 大きくて見やすく
+                }
                 
-                // ジャイロ許可画面の子要素を個別にスケール
+                // ゲーム中の表示要素
+                const distanceDisplay = document.getElementById('distanceDisplay');
+                if (distanceDisplay) {
+                    distanceDisplay.style.fontSize = (42 * scale) + 'px';
+                }
+                
+                const bananaCounter = document.getElementById('bananaCounter');
+                if (bananaCounter) {
+                    bananaCounter.style.fontSize = (32 * scale) + 'px';
+                }
+                
+                const speedGuide = document.getElementById('speedGuide');
+                if (speedGuide) {
+                    speedGuide.style.fontSize = (28 * scale) + 'px';  // 小さく控えめに
+                }
+                
+                // ジャイロ許可画面
                 const gyroScreen = document.getElementById('gyroPermissionScreen');
                 if (gyroScreen) {
-                    const childDivs = gyroScreen.querySelectorAll('div');
-                    childDivs.forEach((div, index) => {
-                        if (index === 0) {
-                            div.style.fontSize = (48 * this.uiScale) + 'px';
-                            div.style.marginBottom = (60 * this.uiScale) + 'px';
-                        } else if (index === 1) {
-                            div.style.fontSize = (36 * this.uiScale) + 'px';
-                            div.style.marginBottom = (60 * this.uiScale) + 'px';
-                        }
-                    });
+                    const textDivs = gyroScreen.querySelectorAll('div');
+                    if (textDivs[0]) {
+                        textDivs[0].style.fontSize = (32 * scale) + 'px';
+                        textDivs[0].style.marginBottom = (30 * scale) + 'px';
+                    }
+                    if (textDivs[1]) {
+                        textDivs[1].style.fontSize = (24 * scale) + 'px';
+                        textDivs[1].style.marginBottom = (30 * scale) + 'px';
+                    }
                     
-                    const button = gyroScreen.querySelector('#gyroPermissionButton');
-                    if (button) {
-                        button.style.padding = `${30 * this.uiScale}px ${60 * this.uiScale}px`;
-                        button.style.fontSize = (40 * this.uiScale) + 'px';
-                        button.style.borderRadius = (20 * this.uiScale) + 'px';
+                    const gyroButton = document.getElementById('gyroPermissionButton');
+                    if (gyroButton) {
+                        gyroButton.style.fontSize = (44 * scale) + 'px';  // 大きくタップしやすく
+                        gyroButton.style.padding = `${35 * scale}px ${70 * scale}px`;
+                        gyroButton.style.borderRadius = (22 * scale) + 'px';
                     }
                 }
                 
-                // CSS クラスベースの要素をスケール
+                // ゲームオーバー画面
+                const gameOverScreen = document.getElementById('gameOverScreen');
+                if (gameOverScreen) {
+                    const mainText = gameOverScreen.querySelector('div:first-child');
+                    if (mainText) {
+                        mainText.style.fontSize = (38 * scale) + 'px';  // 適度なサイズ
+                        mainText.style.margin = `${12 * scale}px 0`;
+                    }
+                    
+                    const bananaText = gameOverScreen.querySelector('div:nth-child(2)');
+                    if (bananaText) {
+                        bananaText.style.fontSize = (28 * scale) + 'px';  // 控えめなサイズ
+                        bananaText.style.margin = `${12 * scale}px 0`;
+                    }
+                    
+                    // ボタン群 - 小さくしてすべて表示
+                    const buttons = gameOverScreen.querySelectorAll('.button');
+                    buttons.forEach(button => {
+                        button.style.fontSize = (22 * scale) + 'px';  // 小さく
+                        button.style.padding = `${12 * scale}px ${24 * scale}px`;
+                        button.style.margin = `${6 * scale}px`;
+                    });
+                }
+                
+                // バナナアイコン
                 const bananaIcons = document.querySelectorAll('.banana-icon');
                 bananaIcons.forEach(icon => {
-                    icon.style.width = (80 * this.uiScale) + 'px';
-                    icon.style.height = (80 * this.uiScale) + 'px';
+                    icon.style.width = (50 * scale) + 'px';
+                    icon.style.height = (50 * scale) + 'px';
                 });
                 
                 const bananaInlines = document.querySelectorAll('.banana-inline');
                 bananaInlines.forEach(icon => {
-                    icon.style.width = (57 * this.uiScale) + 'px';
-                    icon.style.height = (57 * this.uiScale) + 'px';
+                    icon.style.width = (38 * scale) + 'px';
+                    icon.style.height = (38 * scale) + 'px';
                 });
             }
 
