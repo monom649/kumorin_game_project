@@ -27,17 +27,20 @@
             position: fixed;
             top: 0;
             left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         /* ゲームコンテナ: 1920×1080比率を維持してスケール */
         .game-container {
             width: 1080px;
             height: 1920px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
+            position: relative;
             transform-origin: center;
             background: #000;
+            overflow: hidden; /* 重要: はみ出し部分を隠す */
+            box-shadow: 0 0 50px rgba(255,255,255,0.2); /* コンテナの境界を視覚化 */
         }
 
         /* 縦向き固定 */
@@ -337,7 +340,7 @@
         </div>
 
         <!-- ジャイロ許可画面 -->
-        <div id="gyroPermissionScreen" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white; font-size: 48px;">
+        <div id="gyroPermissionScreen" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white; font-size: 48px;">
             <div style="margin-bottom: 60px;">
                 🎮 くもりんを操作するために<br>
                 センサーの許可が必要です
@@ -467,14 +470,17 @@
                     
                     let scale;
                     if (screenRatio > targetRatio) {
-                        // 画面が横に広い場合、高さに合わせる
+                        // 画面が横に広い場合（iPadなど）、高さに合わせる
                         scale = screenHeight / targetHeight;
                     } else {
-                        // 画面が縦に長い場合、幅に合わせる
+                        // 画面が縦に長い場合（iPhoneなど）、幅に合わせる
                         scale = screenWidth / targetWidth;
                     }
                     
-                    container.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                    // スケールを適用（bodyのflexboxでセンタリングされるので translate不要）
+                    container.style.transform = `scale(${scale})`;
+                    
+                    console.log(`📱 Screen: ${screenWidth}x${screenHeight}, Scale: ${scale.toFixed(3)}, Ratio: ${screenRatio.toFixed(3)}`);
                 };
                 
                 updateScale();
