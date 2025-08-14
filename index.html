@@ -392,7 +392,9 @@
                 this.bananas = [];
                 
                 // ジャイロセンサー
-                this.gyroData = { alpha: 0 };
+                this.gyroData = { alpha: 0, beta: 0, gamma: 0 };
+                this.gyroBaseline = { beta: 0, gamma: 0 }; // 基準角度
+                this.isCalibrated = false;
                 
                 // デバッグモード（開発用）
                 this.debugMode = window.location.search.includes('debug=true');
@@ -529,12 +531,46 @@
                 this.gyroData.gamma = Math.floor(event.gamma || 0); // Y軸（-90~90までの値）
                 this.gyroData.alpha = Math.floor(event.alpha || 0); // Z軸（0~360までの値）
                 
+                // 初回キャリブレーション（3秒間の値を平均化）
+                if (!this.isCalibrated) {
+                    this.calibrateGyro();
+                }
+                
                 // デバッグUI更新
                 if (this.debugMode) {
-                    document.getElementById('gyroStatus').textContent = 'アクティブ';
+                    document.getElementById('gyroStatus').textContent = this.isCalibrated ? 'キャリブレ済み' : 'キャリブレ中...';
                     document.getElementById('alphaValue').textContent = this.gyroData.alpha;
                     document.getElementById('betaValue').textContent = this.gyroData.beta;
                     document.getElementById('gammaValue').textContent = this.gyroData.gamma;
+                }
+            }
+
+            calibrateGyro() {
+                if (!this.calibrationData) {
+                    this.calibrationData = {
+                        betaSum: 0,
+                        gammaSum: 0,
+                        count: 0,
+                        startTime: Date.now()
+                    };
+                }
+                
+                // 3秒間データ収集
+                const elapsed = Date.now() - this.calibrationData.startTime;
+                if (elapsed < 3000) {
+                    this.calibrationData.betaSum += this.gyroData.beta;
+                    this.calibrationData.gammaSum += this.gyroData.gamma;
+                    this.calibrationData.count++;
+                } else {
+                    // 平均値を基準角度として設定
+                    this.gyroBaseline.beta = Math.round(this.calibrationData.betaSum / this.calibrationData.count);
+                    this.gyroBaseline.gamma = Math.round(this.calibrationData.gammaSum / this.calibrationData.count);
+                    this.isCalibrated = true;
+                    
+                    console.log(`🎯 ジャイロキャリブレーション完了: Beta基準=${this.gyroBaseline.beta}°, Gamma基準=${this.gyroBaseline.gamma}°`);
+                    
+                    // キャリブレーションデータをクリア
+                    this.calibrationData = null;
                 }
             }
 
@@ -648,6 +684,11 @@
             startIntro() {
                 document.getElementById('titleScreen').style.display = 'none';
                 document.getElementById('introScreen').style.display = 'block';
+                
+                // ジャイロキャリブレーション開始のメッセージ
+                if (!this.touchControls && !this.isCalibrated) {
+                    console.log('📱 ジャイロセンサーキャリブレーション開始: スマートフォンを自然な角度で持ってください（3秒間）');
+                }
                 
                 // ソーダおじさんの要素を確認してデバッグ
                 const soda = document.getElementById('sodaOjisan');
@@ -771,23 +812,30 @@
                         document.getElementById('controlStatus').textContent = `タッチ: ${this.touchDirection}`;
                     }
                 }
-                // ジャイロセンサーの確認（4方向対応）
-                else if (this.gyroData) {
+                // ジャイロセンサーの確認（4方向対応、キャリブレーション済み）
+                else if (this.gyroData && this.isCalibrated) {
                     const alpha = this.gyroData.alpha || 0;
                     const beta = this.gyroData.beta || 0;
                     const gamma = this.gyroData.gamma || 0;
                     
+                    // 基準角度からの相対的な傾きを計算
+                    const relativeBeta = beta - this.gyroBaseline.beta;
+                    const relativeGamma = gamma - this.gyroBaseline.gamma;
+                    
+                    // 感度を調整（20度から15度に変更してより敏感に）
+                    const sensitivity = 15;
+                    
                     // 左右移動（Gamma値: 左右の傾き）
-                    if (gamma < -15) {
+                    if (relativeGamma < -sensitivity) {
                         shouldMoveLeft = true;
-                    } else if (gamma > 15) {
+                    } else if (relativeGamma > sensitivity) {
                         shouldMoveRight = true;
                     }
                     
                     // 上下移動（Beta値: 前後の傾き）
-                    if (beta < -15) {
+                    if (relativeBeta < -sensitivity) {
                         shouldMoveUp = true;
-                    } else if (beta > 15) {
+                    } else if (relativeBeta > sensitivity) {
                         shouldMoveDown = true;
                     }
                     
@@ -807,7 +855,7 @@
                         }
                         
                         document.getElementById('controlStatus').textContent = 
-                            `${status} (A:${alpha}, B:${beta}, G:${gamma})`;
+                            `${status} (相対B:${relativeBeta}, 相対G:${relativeGamma})`;
                     }
                 }
                 
