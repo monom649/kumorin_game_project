@@ -425,6 +425,7 @@
                     <div>スピード: <span id="speedStatus">×1.0</span></div>
                     <div style="color: yellow;">音声: <span id="audioStatus">未解放</span></div>
                     <div style="color: cyan;">最新: <span id="debugLog">-</span></div>
+                    <div style="color: orange;">ファイル: <span id="audioFileStatus">-</span></div>
                     <div>バナナ: <span id="bananaStatus">0個</span></div>
                 </div>
             </div>
@@ -990,6 +991,13 @@
                     
                     if (this.audio[audioName]) {
                         const audio = this.audio[audioName];
+                        document.getElementById('audioFileStatus').textContent = `${audioName}:${audio.readyState}`;
+                        
+                        // 音声ファイルの状態を確認
+                        if (audio.readyState < 3) { // HAVE_FUTURE_DATA未満
+                            document.getElementById('debugLog').textContent = `${audioName}未読込(${audio.readyState})`;
+                            return;
+                        }
                         
                         // 強制的にaudio要素をリセット
                         audio.pause();
@@ -1003,8 +1011,10 @@
                         if (playPromise !== undefined) {
                             playPromise.then(() => {
                                 console.log(`🎵 音声再生成功: ${audioName}`);
+                                document.getElementById('debugLog').textContent = `${audioName}再生成功`;
                             }).catch(error => {
                                 console.error(`🔇 音声再生失敗: ${audioName}`, error);
+                                document.getElementById('debugLog').textContent = `${audioName}再生失敗:${error.message}`;
                                 
                                 // 最後の手段：ユーザーに直接操作を求める
                                 this.forceAudioPlay(audioName);
@@ -1021,6 +1031,8 @@
                         }
                     } else {
                         console.error(`❌ 音声ファイルが見つかりません: ${audioName}`);
+                        document.getElementById('debugLog').textContent = `${audioName}ファイル不在`;
+                        document.getElementById('audioFileStatus').textContent = `${audioName}:なし`;
                     }
                 } catch (error) {
                     console.error('音声再生エラー:', audioName, error);
