@@ -658,7 +658,8 @@
                     bird: new Image(),
                     banana: new Image(),
                     cloud1: new Image(),
-                    cloud2: new Image()
+                    cloud2: new Image(),
+                    meteorite: new Image()
                 };
                 
                 this.assets.crow.src = 'https://i.imgur.com/TdVc7OM.jpg';
@@ -666,6 +667,7 @@
                 this.assets.banana.src = 'https://i.imgur.com/n4B27qz.jpg';
                 this.assets.cloud1.src = 'https://i.imgur.com/qY1JVuT.jpg';
                 this.assets.cloud2.src = 'https://i.imgur.com/0ybVRKX.jpg';
+                this.assets.meteorite.src = 'https://i.imgur.com/8cca641b-8a05-4af4-a01f-ef4fb50a7931';
             }
 
             loadAudio() {
@@ -978,55 +980,36 @@
                     });
                 }
                 
-                // 渡り鳥のみの生成（初期頻度を下げてバランス調整）
+                // 障害物生成システム（距離に応じて鳥から隕石に変化）
                 const distanceCheck = Math.floor(this.distance / 100);
                 
-                // 初期は低頻度から始まり、緩やかに上昇
-                let obstacleChance = 0.008; // 基本0.8%（大幅減）
-                
-                if (this.distance >= 1000) {
-                    obstacleChance = 0.012; // 1000m以降: 1.2%
-                }
-                if (this.distance >= 3000) {
-                    obstacleChance = 0.018; // 3000m以降: 1.8%
-                }
+                // 鳥の生成確率（5000m以降急激に減少）
+                let birdChance = 0.008; // 基本0.8%
+                if (this.distance >= 1000) birdChance = 0.012; // 1000m以降: 1.2%
+                if (this.distance >= 3000) birdChance = 0.018; // 3000m以降: 1.8%
                 if (this.distance >= 5000) {
-                    obstacleChance = 0.025; // 5000m以降: 2.5%
+                    // 5000m以降急激に減少
+                    const reduction = Math.min((this.distance - 5000) / 3000, 0.9); // 8000mで90%減少
+                    birdChance = 0.025 * (1 - reduction);
                 }
+                
+                // 隕石の生成確率（8000m以降徐々に登場）
+                let meteoriteChance = 0;
                 if (this.distance >= 8000) {
-                    obstacleChance = 0.035; // 8000m以降: 3.5%
-                }
-                if (this.distance >= 12000) {
-                    obstacleChance = 0.045; // 12000m以降: 4.5%
-                }
-                
-                // デバッグログ（低頻度）
-                if (this.debugMode && Math.random() < 0.001) {
-                    console.log(`距離: ${Math.floor(this.distance)}m, 障害物確率: ${(obstacleChance * 100).toFixed(2)}%`);
+                    // 8000m以降徐々に登場、12000mで最大に
+                    const meteoriteProgress = Math.min((this.distance - 8000) / 4000, 1); // 12000mで1.0
+                    meteoriteChance = 0.035 * meteoriteProgress; // 最大3.5%
                 }
                 
-                if (Math.random() < obstacleChance) {
-                    // 渡り鳥のみを生成（カラスは完全削除）
-                    // 渡り鳥（1体ずつ飛行）
+                // 鳥の生成
+                if (Math.random() < birdChance) {
                     const direction = Math.random() < 0.5 ? 'left' : 'right';
-                    // 必ず画面外からスタートするように、より遠くに設定
-                    const startX = direction === 'left' ? -300 : 1380; // 1080 + 300 = 1380
-                    // Y座標は中央付近に限定して突然描画を防止
-                    const y = Math.random() * 800 + 560; // 560〜1360pxの範囲（画面中央付近）
+                    const startX = direction === 'left' ? -300 : 1380;
+                    const y = Math.random() * 800 + 560;
                     
-                    // デバッグログ（突然描画確認用）
-                    if (this.debugMode) {
-                        console.log(`渡り鳥生成: direction=${direction}, startX=${startX}, y=${y}`);
-                    }
-                    
-                    // 鳥の速度を距離に応じて調整（60%に減速）
-                    let birdSpeed = 5; // 基本速度（8の60% = 4.8 → 5）
-                    if (this.distance >= 5000) {
-                        birdSpeed = 6; // 5000m以降（10の60% = 6）
-                    }
-                    if (this.distance >= 10000) {
-                        birdSpeed = 7; // 10000m以降（12の60% = 7.2 → 7）
-                    }
+                    let birdSpeed = 5;
+                    if (this.distance >= 5000) birdSpeed = 6;
+                    if (this.distance >= 10000) birdSpeed = 7;
                     
                     this.obstacles.push({
                         x: startX,
@@ -1037,6 +1020,36 @@
                         direction: direction,
                         speed: birdSpeed * this.speedMultiplier
                     });
+                }
+                
+                // 隕石の生成
+                if (Math.random() < meteoriteChance) {
+                    // 隕石は上から垂直に落下
+                    const x = Math.random() * (1080 - 150); // 150pxサイズを考慮
+                    const y = -200;
+                    
+                    // 隕石の速度は鳥の1.5倍
+                    let meteoriteSpeed = 7.5; // 基本速度 5 × 1.5 = 7.5
+                    if (this.distance >= 10000) meteoriteSpeed = 10.5; // 7 × 1.5 = 10.5
+                    
+                    this.obstacles.push({
+                        x: x,
+                        y: y,
+                        width: 150,
+                        height: 150,
+                        type: 'meteorite',
+                        direction: 'down', // 垂直落下
+                        speed: meteoriteSpeed * this.speedMultiplier
+                    });
+                    
+                    if (this.debugMode) {
+                        console.log(`隕石生成: x=${x}, speed=${meteoriteSpeed * this.speedMultiplier}`);
+                    }
+                }
+                
+                // デバッグログ（低頻度）
+                if (this.debugMode && Math.random() < 0.001) {
+                    console.log(`距離: ${Math.floor(this.distance)}m, 鳥確率: ${(birdChance * 100).toFixed(2)}%, 隕石確率: ${(meteoriteChance * 100).toFixed(2)}%`);
                 }
                 
                 // バナナ生成（距離に応じて確率調整）
@@ -1063,20 +1076,23 @@
                     return cloud.y < 1920 + 200; // 1920 + 200 = 2120
                 });
                 
-                // 渡り鳥のみの更新（突然描画防止のため厳密な判定）
+                // 障害物の更新（鳥と隕石）
                 this.obstacles = this.obstacles.filter(obstacle => {
                     if (obstacle.type === 'bird') {
+                        // 鳥の左右移動
                         if (obstacle.direction === 'left') {
                             obstacle.x += obstacle.speed;
-                            // 十分に画面外に出たら削除
-                            return obstacle.x < 1080 + 400; // 1080 + 400 = 1480
+                            return obstacle.x < 1080 + 400;
                         } else {
                             obstacle.x -= obstacle.speed;
-                            // 十分に画面外に出たら削除
                             return obstacle.x > -400;
                         }
+                    } else if (obstacle.type === 'meteorite') {
+                        // 隕石の垂直落下
+                        obstacle.y += obstacle.speed;
+                        return obstacle.y < 1920 + 200;
                     }
-                    return false; // カラスはすべて除去
+                    return false;
                 });
                 
                 // バナナの更新
@@ -1184,17 +1200,14 @@
                 
                 // プレイヤー描画はHTML要素で行うため、ここでは描画しない
                 
-                // 渡り鳥のみ描画（カラスは完全削除）
+                // 障害物描画（鳥と隕石）
                 this.obstacles.forEach(obstacle => {
                     if (obstacle.type === 'bird') {
                         const drawWidth = 200;
                         const drawHeight = 200;
                         
-                        // 渡り鳥の方向に応じて画像を調整（元画像の向きを考慮）
                         this.ctx.save();
-                        
                         if (obstacle.direction === 'left') {
-                            // 左から右へ移動: 元画像が左向きなら反転が必要
                             this.ctx.scale(-1, 1);
                             this.ctx.drawImage(
                                 this.assets.bird,
@@ -1202,15 +1215,20 @@
                                 drawWidth, drawHeight
                             );
                         } else {
-                            // 右から左へ移動: 元画像が左向きなら通常描画
                             this.ctx.drawImage(
                                 this.assets.bird,
                                 obstacle.x, obstacle.y,
                                 drawWidth, drawHeight
                             );
                         }
-                        
                         this.ctx.restore();
+                    } else if (obstacle.type === 'meteorite') {
+                        // 隕石描画
+                        this.ctx.drawImage(
+                            this.assets.meteorite,
+                            obstacle.x, obstacle.y,
+                            obstacle.width, obstacle.height
+                        );
                     }
                 });
                 
