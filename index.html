@@ -960,6 +960,11 @@
 
             playAudio(audioName) {
                 try {
+                    if (!this.audioUnlocked) {
+                        console.log('🔒 音声がまだ解放されていません');
+                        return;
+                    }
+                    
                     if (this.audio[audioName]) {
                         const audio = this.audio[audioName];
                         
@@ -1689,9 +1694,13 @@
                 // 画面揺れ開始
                 container.classList.add('shake');
                 
-                // くもりん回転落下開始
+                // くもりん回転落下開始と非表示化
                 if (kumorin) {
                     kumorin.classList.add('kumorin-death');
+                    // アニメーション完了後にくもりんを完全に非表示
+                    setTimeout(() => {
+                        kumorin.style.display = 'none';
+                    }, 1000);
                 }
                 
                 // アニメーション終了後にリザルト画面表示
@@ -1750,6 +1759,7 @@
                 
                 if (kumorinPlayer) {
                     kumorinPlayer.classList.remove('kumorin-death');
+                    kumorinPlayer.style.display = 'block'; // 再表示
                     console.log('くもりん死亡アニメーションクラスをリセット');
                 }
                 
