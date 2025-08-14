@@ -653,12 +653,16 @@
                 // ジャイロ許可ボタン
                 document.getElementById('gyroPermissionButton').addEventListener('click', async () => {
                     console.log('🖱️ ジャイロ許可ボタンがクリックされました（ユーザージェスチャー）');
+                    // 音声解放を最初に実行
+                    await this.unlockAudio();
                     await this.handleGyroPermissionClick();
                 });
 
                 // ジャイロスキップボタン
-                document.getElementById('gyroSkipButton').addEventListener('click', () => {
+                document.getElementById('gyroSkipButton').addEventListener('click', async () => {
                     console.log('🖱️ ジャイロスキップボタンがクリックされました');
+                    // 音声解放を最初に実行
+                    await this.unlockAudio();
                     this.hideGyroPermissionScreen();
                     this.setupTouchControls();
                     this.startIntro();
