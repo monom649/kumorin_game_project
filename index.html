@@ -762,13 +762,12 @@
                     this.calibrateGyro();
                 }
                 
-                // デバッグUI更新
-                if (this.debugMode) {
-                    document.getElementById('gyroStatus').textContent = this.isCalibrated ? 'キャリブレ済み' : 'キャリブレ中...';
-                    document.getElementById('alphaValue').textContent = this.gyroData.alpha;
-                    document.getElementById('betaValue').textContent = this.gyroData.beta;
-                    document.getElementById('gammaValue').textContent = this.gyroData.gamma;
-                }
+                // デバッグUI更新（常に更新）
+                document.getElementById('gyroStatus').textContent = this.isCalibrated ? 'キャリブレ済み' : 'キャリブレ中...';
+                document.getElementById('alphaValue').textContent = this.gyroData.alpha;
+                document.getElementById('betaValue').textContent = this.gyroData.beta;
+                document.getElementById('gammaValue').textContent = this.gyroData.gamma;
+                document.getElementById('controlStatus').textContent = 'ジャイロ操作';
             }
 
             calibrateGyro() {
@@ -1575,13 +1574,11 @@
                     }
                 }
                 
-                // デバッグ表示更新
-                if (this.debugMode) {
-                    const speedStatus = document.getElementById('speedStatus');
-                    const bananaStatus = document.getElementById('bananaStatus');
-                    if (speedStatus) speedStatus.textContent = `×${this.speedMultiplier.toFixed(1)}`;
-                    if (bananaStatus) bananaStatus.textContent = `${this.bananaCount}個`;
-                }
+                // デバッグ表示更新（常に更新）
+                const speedStatus = document.getElementById('speedStatus');
+                const bananaStatus = document.getElementById('bananaStatus');
+                if (speedStatus) speedStatus.textContent = `×${this.speedMultiplier.toFixed(1)}`;
+                if (bananaStatus) bananaStatus.textContent = `${this.bananaCount}個`;
             }
 
             draw() {
