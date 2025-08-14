@@ -420,6 +420,7 @@
                 
                 // 音声解放フラグ
                 this.audioUnlocked = false;
+                this.audioContext = null;
                 
                 // プレイヤー（くもりん）
                 this.player = {
@@ -741,28 +742,53 @@
             }
 
             async unlockAudio() {
-                if (!this.audioUnlocked && this.audio) {
+                if (!this.audioUnlocked) {
                     try {
-                        // 各音声ファイルを一瞬再生して停止（音声コンテキストを解放）
-                        const promises = Object.values(this.audio).map(async (audio) => {
-                            try {
-                                audio.volume = 0; // 無音で再生
-                                const playPromise = audio.play();
-                                if (playPromise) {
-                                    await playPromise;
-                                    audio.pause();
-                                    audio.currentTime = 0;
-                                }
-                                audio.volume = 0.7; // 音量を戻す
-                            } catch (e) {
-                                // 個別の音声ファイルのエラーは無視
-                            }
-                        });
+                        // Web Audio APIを使用してコンテキストを作成・開始
+                        if (!this.audioContext) {
+                            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                            console.log('AudioContext作成:', this.audioContext.state);
+                        }
                         
-                        await Promise.allSettled(promises);
+                        // コンテキストがsuspendedの場合はresume
+                        if (this.audioContext.state === 'suspended') {
+                            await this.audioContext.resume();
+                            console.log('AudioContext resume完了:', this.audioContext.state);
+                        }
+                        
+                        // HTML Audio要素も解放
+                        if (this.audio) {
+                            for (const [name, audio] of Object.entries(this.audio)) {
+                                try {
+                                    // 各音声に触れる（load()メソッドを呼ぶ）
+                                    audio.load();
+                                    
+                                    // 一瞬だけ再生を試行
+                                    const originalVolume = audio.volume;
+                                    audio.volume = 0.01; // 最小音量
+                                    
+                                    const playPromise = audio.play();
+                                    if (playPromise) {
+                                        playPromise.then(() => {
+                                            audio.pause();
+                                            audio.currentTime = 0;
+                                            audio.volume = originalVolume;
+                                            console.log(`✅ ${name} unlock成功`);
+                                        }).catch(e => {
+                                            audio.volume = originalVolume;
+                                            console.log(`⚠️ ${name} unlock失敗:`, e.message);
+                                        });
+                                    }
+                                } catch (e) {
+                                    console.log(`⚠️ ${name} 処理エラー:`, e.message);
+                                }
+                            }
+                        }
+                        
                         this.audioUnlocked = true;
-                        this.showAudioMessage('🔓 音声解放完了');
-                        console.log('🔓 音声コンテキスト解放完了');
+                        this.showAudioMessage('🔓 音声解放完了 (WebAudio)');
+                        console.log('🔓 音声コンテキスト解放完了 (WebAudio)');
+                        
                     } catch (error) {
                         console.error('音声解放エラー:', error);
                         this.showAudioMessage(`❌ 音声解放失敗: ${error.message}`);
@@ -773,8 +799,16 @@
             playAudio(audioName) {
                 try {
                     if (this.audio[audioName]) {
-                        this.audio[audioName].currentTime = 0;
-                        const playPromise = this.audio[audioName].play();
+                        const audio = this.audio[audioName];
+                        
+                        // 強制的にaudio要素をリセット
+                        audio.pause();
+                        audio.currentTime = 0;
+                        
+                        // muted属性を使って強制的に再生を試行
+                        audio.muted = false;
+                        
+                        const playPromise = audio.play();
                         
                         if (playPromise !== undefined) {
                             playPromise.then(() => {
@@ -782,14 +816,22 @@
                                 this.showAudioMessage(`🎵 ${audioName} 再生成功`);
                             }).catch(error => {
                                 console.error(`🔇 音声再生失敗: ${audioName}`, error);
-                                this.showAudioMessage(`🔇 ${audioName} 再生失敗: ${error.message}`);
+                                this.showAudioMessage(`🔇 ${audioName} 再生失敗: ${error.name}`);
                                 
-                                // 解放されていない場合は解放を試行
-                                if (!this.audioUnlocked) {
-                                    this.showAudioMessage('🔄 音声解放を再試行中...');
-                                    this.unlockAudio();
-                                }
+                                // 最後の手段：ユーザーに直接操作を求める
+                                this.forceAudioPlay(audioName);
                             });
+                        } else {
+                            // 古いブラウザの場合
+                            setTimeout(() => {
+                                if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
+                                    console.log(`🎵 音声再生成功 (古いブラウザ): ${audioName}`);
+                                    this.showAudioMessage(`🎵 ${audioName} 再生成功 (old)`);
+                                } else {
+                                    console.log(`🔇 音声再生失敗 (古いブラウザ): ${audioName}`);
+                                    this.showAudioMessage(`🔇 ${audioName} 失敗 (old)`);
+                                }
+                            }, 100);
                         }
                     } else {
                         console.error(`❌ 音声ファイルが見つかりません: ${audioName}`);
@@ -799,6 +841,32 @@
                     console.error('音声再生エラー:', audioName, error);
                     this.showAudioMessage(`❌ ${audioName} エラー: ${error.message}`);
                 }
+            }
+            
+            forceAudioPlay(audioName) {
+                // 画面タップで音声再生を促すメッセージ
+                this.showAudioMessage(`👆 画面タップで${audioName}再生`);
+                
+                const tapHandler = () => {
+                    if (this.audio[audioName]) {
+                        this.audio[audioName].currentTime = 0;
+                        this.audio[audioName].play().then(() => {
+                            console.log(`🎵 タップ後音声再生成功: ${audioName}`);
+                            this.showAudioMessage(`🎵 ${audioName} タップ後成功`);
+                        }).catch(e => {
+                            console.log(`🔇 タップ後も再生失敗: ${audioName}`, e);
+                            this.showAudioMessage(`🔇 ${audioName} タップ後も失敗`);
+                        });
+                    }
+                    
+                    // イベントリスナーを削除
+                    document.removeEventListener('touchstart', tapHandler, { once: true });
+                    document.removeEventListener('click', tapHandler, { once: true });
+                };
+                
+                // ワンタップで音声再生
+                document.addEventListener('touchstart', tapHandler, { once: true });
+                document.addEventListener('click', tapHandler, { once: true });
             }
 
             stopAudio(audioName) {
