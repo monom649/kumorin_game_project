@@ -290,8 +290,21 @@
             }
         }
 
+        @keyframes slideDown {
+            from { 
+                bottom: -200px;
+            }
+            to { 
+                bottom: -1000px; /* 元の位置まで下降 */
+            }
+        }
+
         .soda-entrance {
             animation: slideUp 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .soda-exit {
+            animation: slideDown 1.5s ease-out forwards;
         }
 
         .kumorin-flyout {
@@ -658,6 +671,12 @@
                         const kumorin = document.getElementById('kumorinIntro');
                         kumorin.classList.add('kumorin-flyout');
                         this.playAudio('ohno'); // くもりん飛ばされる音
+                        
+                        // 同時にソーダおじさんの下降開始
+                        if (soda) {
+                            soda.classList.add('soda-exit');
+                            console.log('ソーダおじさん下降アニメーション開始');
+                        }
                         
                         // 1.5秒後にゲーム開始
                         setTimeout(() => {
