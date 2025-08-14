@@ -381,8 +381,9 @@
 
         <!-- ゲームオーバー画面 -->
         <div id="gameOverScreen">
-            <h1>ゲームオーバー</h1>
-            <div id="finalDistance">0m</div>
+            <div style="font-size: 72px; color: white; margin: 20px 0; text-align: center;">
+                くもりんは<span id="finalDistance">0m</span>とんでった！
+            </div>
             <div style="font-size: 48px; color: #ffff00; margin: 20px 0;">
                 <span id="finalBananas">0</span>本ゲットしたよ！
             </div>
@@ -1357,7 +1358,7 @@
             }
 
             shareScore() {
-                const text = `「くもりんとばし」で${Math.floor(this.distance)}m飛びました！あなたはどこまで飛べる？ #くもりんとばし #サンサンキッズTV`;
+                const text = `「くもりんとばし」でくもりんは${Math.floor(this.distance)}mとんでった！バナナは${this.bananaCount}本ゲットしたよ！あなたはどこまで飛べる？ #くもりんとばし #サンサンキッズTV`;
                 const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
                 window.open(url, '_blank');
             }
