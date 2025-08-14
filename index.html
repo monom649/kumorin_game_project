@@ -672,13 +672,13 @@
                         kumorin.classList.add('kumorin-flyout');
                         this.playAudio('ohno'); // くもりん飛ばされる音
                         
-                        // 0.2秒後にソーダおじさんの下降開始
+                        // 0.5秒後にソーダおじさんの下降開始
                         setTimeout(() => {
                             if (soda) {
                                 soda.classList.add('soda-exit');
-                                console.log('ソーダおじさん下降アニメーション開始（0.2秒遅延）');
+                                console.log('ソーダおじさん下降アニメーション開始（0.5秒遅延）');
                             }
-                        }, 200);
+                        }, 500);
                         
                         // 1.5秒後にゲーム開始
                         setTimeout(() => {
