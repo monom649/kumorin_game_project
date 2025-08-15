@@ -272,6 +272,41 @@
             z-index: 1000;
         }
 
+        /* 仮想ジョイスティック */
+        #virtualJoystick {
+            position: absolute;
+            bottom: 100px;
+            right: 50px;
+            width: 120px;
+            height: 120px;
+            display: none;
+            z-index: 2000;
+        }
+
+        .joystick-outer {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            touch-action: none;
+        }
+
+        .joystick-inner {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s ease;
+            pointer-events: none;
+        }
+
         /* ゲームオーバー画面 */
         #gameOverScreen {
             display: none;
@@ -449,6 +484,12 @@
                     <div>バナナ: <span id="bananaStatus">0個</span></div>
                 </div>
             </div>
+            <!-- 仮想ジョイスティック -->
+            <div id="virtualJoystick">
+                <div class="joystick-outer">
+                    <div class="joystick-inner"></div>
+                </div>
+            </div>
         </div>
 
         <!-- ゲームオーバー画面 -->
@@ -519,6 +560,17 @@
                 this.setupEventListeners();
                 this.loadAssets();
                 this.loadAudio();
+                
+                // 仮想ジョイスティック
+                this.virtualJoystick = {
+                    active: false,
+                    centerX: 0,
+                    centerY: 0,
+                    currentX: 0,
+                    currentY: 0,
+                    maxDistance: 35 // 内側の円が移動できる最大距離
+                };
+                this.setupVirtualJoystick();
             }
 
             setupScreenScale() {
@@ -648,6 +700,65 @@
             setupCanvas() {
                 this.canvas.width = this.screenWidth;
                 this.canvas.height = this.screenHeight;
+            }
+
+            setupVirtualJoystick() {
+                const joystick = document.getElementById('virtualJoystick');
+                const outer = joystick.querySelector('.joystick-outer');
+                const inner = joystick.querySelector('.joystick-inner');
+                
+                const handleStart = (e) => {
+                    e.preventDefault();
+                    this.virtualJoystick.active = true;
+                    
+                    const rect = outer.getBoundingClientRect();
+                    this.virtualJoystick.centerX = rect.left + rect.width / 2;
+                    this.virtualJoystick.centerY = rect.top + rect.height / 2;
+                };
+                
+                const handleMove = (e) => {
+                    if (!this.virtualJoystick.active) return;
+                    e.preventDefault();
+                    
+                    const touch = e.touches ? e.touches[0] : e;
+                    const deltaX = touch.clientX - this.virtualJoystick.centerX;
+                    const deltaY = touch.clientY - this.virtualJoystick.centerY;
+                    
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    const maxDistance = this.virtualJoystick.maxDistance;
+                    
+                    if (distance <= maxDistance) {
+                        this.virtualJoystick.currentX = deltaX;
+                        this.virtualJoystick.currentY = deltaY;
+                    } else {
+                        const angle = Math.atan2(deltaY, deltaX);
+                        this.virtualJoystick.currentX = Math.cos(angle) * maxDistance;
+                        this.virtualJoystick.currentY = Math.sin(angle) * maxDistance;
+                    }
+                    
+                    // 内側の円の位置を更新
+                    inner.style.transform = `translate(calc(-50% + ${this.virtualJoystick.currentX}px), calc(-50% + ${this.virtualJoystick.currentY}px))`;
+                };
+                
+                const handleEnd = (e) => {
+                    e.preventDefault();
+                    this.virtualJoystick.active = false;
+                    this.virtualJoystick.currentX = 0;
+                    this.virtualJoystick.currentY = 0;
+                    
+                    // 内側の円を中央に戻す
+                    inner.style.transform = 'translate(-50%, -50%)';
+                };
+                
+                // タッチイベント
+                outer.addEventListener('touchstart', handleStart);
+                document.addEventListener('touchmove', handleMove);
+                document.addEventListener('touchend', handleEnd);
+                
+                // マウスイベント（デバッグ用）
+                outer.addEventListener('mousedown', handleStart);
+                document.addEventListener('mousemove', handleMove);
+                document.addEventListener('mouseup', handleEnd);
             }
 
             setupEventListeners() {
@@ -823,6 +934,9 @@
             setupTouchControls() {
                 console.log('タッチ操作設定中...');
                 this.touchControls = true;
+                
+                // 仮想ジョイスティックを表示
+                document.getElementById('virtualJoystick').style.display = 'block';
                 
                 // 画面4方向タップで操作
                 const canvas = this.canvas;
@@ -1267,8 +1381,21 @@
                 let shouldMoveUp = false;
                 let shouldMoveDown = false;
                 
-                // タッチ操作の確認（4方向対応）
-                if (this.touchControls && this.touchDirection) {
+                // 仮想ジョイスティック操作の確認
+                if (this.touchControls && this.virtualJoystick.active) {
+                    const sensitivity = 10; // ジョイスティックの感度
+                    
+                    shouldMoveLeft = this.virtualJoystick.currentX < -sensitivity;
+                    shouldMoveRight = this.virtualJoystick.currentX > sensitivity;
+                    shouldMoveUp = this.virtualJoystick.currentY < -sensitivity;
+                    shouldMoveDown = this.virtualJoystick.currentY > sensitivity;
+                    
+                    if (this.debugMode) {
+                        document.getElementById('controlStatus').textContent = `ジョイスティック: X${this.virtualJoystick.currentX.toFixed(1)} Y${this.virtualJoystick.currentY.toFixed(1)}`;
+                    }
+                }
+                // 従来のタッチ操作の確認（4方向対応）
+                else if (this.touchControls && this.touchDirection) {
                     shouldMoveLeft = this.touchDirection === 'left';
                     shouldMoveRight = this.touchDirection === 'right';
                     shouldMoveUp = this.touchDirection === 'up';
