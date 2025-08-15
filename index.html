@@ -571,6 +571,8 @@
                 this.loadAssets();
                 this.loadAudio();
                 this.setupVirtualJoystick();
+                
+                console.log('🎯 KumorinGameコンストラクター完了');
             }
 
             setupScreenScale() {
@@ -772,6 +774,8 @@
             }
 
             setupEventListeners() {
+                console.log('🔧 setupEventListeners 開始');
+                
                 // スタートボタン
                 document.getElementById('startButton').addEventListener('click', async () => {
                     try {
@@ -834,6 +838,7 @@
                     this.startIntro();
                 });
 
+                console.log('✅ setupEventListeners 完了');
                 // 固定サイズなのでリサイズイベントは不要
             }
 
@@ -2131,8 +2136,11 @@
             const startBtn = document.getElementById('startButton');
             if (startBtn) {
                 console.log('✅ スタートボタン要素発見');
-                startBtn.addEventListener('click', () => {
+                startBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     console.log('🖱️ 緊急用スタートボタンクリック検出');
+                    alert('緊急用: スタートボタンがクリックされました！');
                 });
             } else {
                 console.error('❌ スタートボタン要素が見つかりません');
