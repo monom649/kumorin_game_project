@@ -774,10 +774,28 @@
             setupEventListeners() {
                 // スタートボタン
                 document.getElementById('startButton').addEventListener('click', async () => {
-                    document.getElementById('debugLog').textContent = 'スタートボタンクリック';
-                    // 音声解放を最初に実行
-                    await this.unlockAudio();
-                    this.requestGyroPermission();
+                    try {
+                        console.log('🖱️ スタートボタンクリック検出');
+                        
+                        // デバッグログ更新（安全に）
+                        const debugLog = document.getElementById('debugLog');
+                        if (debugLog) {
+                            debugLog.textContent = 'スタートボタンクリック';
+                        }
+                        
+                        console.log('🔓 音声解放開始');
+                        // 音声解放を最初に実行
+                        await this.unlockAudio();
+                        console.log('🔓 音声解放完了');
+                        
+                        console.log('📱 ジャイロ許可要求開始');
+                        this.requestGyroPermission();
+                        console.log('📱 ジャイロ許可要求完了');
+                        
+                    } catch (error) {
+                        console.error('❌ スタートボタンイベントエラー:', error);
+                        alert('エラーが発生しました: ' + error.message);
+                    }
                 });
 
                 // リトライボタン
@@ -820,9 +838,22 @@
             }
 
             requestGyroPermission() {
-                // HTTPSチェック
-                if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-                    alert('センサー許可にはHTTPS接続が必要です。\n\nタップ操作でプレイします。');
+                try {
+                    console.log('📱 requestGyroPermission() 開始');
+                    
+                    // HTTPSチェック
+                    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                        console.log('⚠️ HTTPS接続が必要');
+                        alert('センサー許可にはHTTPS接続が必要です。\n\nタップ操作でプレイします。');
+                        this.setupTouchControls();
+                        this.startIntro();
+                        return;
+                    }
+                    
+                    console.log('✅ HTTPS接続確認済み');
+                } catch (error) {
+                    console.error('❌ requestGyroPermission エラー:', error);
+                    alert('センサー許可処理でエラーが発生しました。タップ操作でプレイします。');
                     this.setupTouchControls();
                     this.startIntro();
                     return;
