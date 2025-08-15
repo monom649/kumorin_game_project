@@ -703,9 +703,15 @@
             }
 
             setupVirtualJoystick() {
-                const joystick = document.getElementById('virtualJoystick');
-                const outer = joystick.querySelector('.joystick-outer');
-                const inner = joystick.querySelector('.joystick-inner');
+                try {
+                    const joystick = document.getElementById('virtualJoystick');
+                    const outer = joystick.querySelector('.joystick-outer');
+                    const inner = joystick.querySelector('.joystick-inner');
+                    
+                    if (!joystick || !outer || !inner) {
+                        console.error('仮想ジョイスティック要素が見つかりません');
+                        return;
+                    }
                 
                 const handleStart = (e) => {
                     e.preventDefault();
@@ -759,6 +765,10 @@
                 outer.addEventListener('mousedown', handleStart);
                 document.addEventListener('mousemove', handleMove);
                 document.addEventListener('mouseup', handleEnd);
+                
+                } catch (error) {
+                    console.error('仮想ジョイスティック設定エラー:', error);
+                }
             }
 
             setupEventListeners() {
@@ -936,7 +946,14 @@
                 this.touchControls = true;
                 
                 // 仮想ジョイスティックを表示
-                document.getElementById('virtualJoystick').style.display = 'block';
+                try {
+                    const joystick = document.getElementById('virtualJoystick');
+                    if (joystick) {
+                        joystick.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('仮想ジョイスティック表示エラー:', error);
+                }
                 
                 // 画面4方向タップで操作
                 const canvas = this.canvas;
@@ -1382,7 +1399,7 @@
                 let shouldMoveDown = false;
                 
                 // 仮想ジョイスティック操作の確認
-                if (this.touchControls && this.virtualJoystick.active) {
+                if (this.touchControls && this.virtualJoystick && this.virtualJoystick.active) {
                     const sensitivity = 10; // ジョイスティックの感度
                     
                     shouldMoveLeft = this.virtualJoystick.currentX < -sensitivity;
