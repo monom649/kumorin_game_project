@@ -2039,6 +2039,11 @@
                         if (response === 'granted') {
                             console.log('🎉 ジャイロセンサー許可取得成功');
                             this.hideGyroPermissionScreen();
+                            // ジョイスティックを非表示
+                            const joystick = document.getElementById('virtualJoystick');
+                            if (joystick) {
+                                joystick.style.display = 'none';
+                            }
                             this.setupGyro();
                             this.showGyroTutorial(); // チュートリアル表示
                         } else {
@@ -2056,11 +2061,16 @@
                         this.startIntro();
                     }
                 } else {
-                    console.log('⚠️ DeviceOrientationEvent.requestPermission が利用できません');
-                    alert('このデバイスではセンサー許可が利用できません。\nタップ操作でプレイします。');
+                    // Android等のrequestPermission不要デバイス
+                    console.log('📱 Android等のジャイロ対応デバイス検出');
                     this.hideGyroPermissionScreen();
-                    this.setupTouchControls();
-                    this.startIntro();
+                    // ジョイスティックを非表示
+                    const joystick = document.getElementById('virtualJoystick');
+                    if (joystick) {
+                        joystick.style.display = 'none';
+                    }
+                    this.setupGyro();
+                    this.showGyroTutorial();
                 }
             }
             
