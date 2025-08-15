@@ -5,6 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
     <meta name="permissions" content="gyroscope=(), accelerometer=()">
     <title>くもりんとばし</title>
+    
+    <!-- 緊急デバッグ：最初に実行される簡単なテスト -->
+    <script>
+        console.log('🟢 HTML HEAD: JavaScript実行開始');
+        alert('緊急テスト: JavaScriptが動作しています');
+        
+        // DOMが読み込まれた時点でテスト
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🟢 DOMContentLoaded: DOM読み込み完了');
+            alert('緊急テスト: DOM読み込み完了');
+            
+            // スタートボタンの存在確認
+            setTimeout(() => {
+                const btn = document.getElementById('startButton');
+                console.log('🟢 スタートボタン検索結果:', btn);
+                if (btn) {
+                    alert('緊急テスト: スタートボタン発見！');
+                    btn.onclick = function() {
+                        alert('緊急テスト: スタートボタンクリック成功！');
+                    };
+                } else {
+                    alert('緊急テスト: スタートボタンが見つかりません！');
+                }
+            }, 1000);
+        });
+    </script>
     <style>
         /* カスタムフォント読み込み */
         @font-face {
