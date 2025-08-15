@@ -774,22 +774,28 @@
                 
                 // スタートボタン（タッチとクリック両対応）
                 const startButton = document.getElementById('startButton');
+                let startButtonProcessing = false;
+                
                 const handleStartClick = async (e) => {
+                    if (startButtonProcessing) return; // 重複実行防止
+                    startButtonProcessing = true;
+                    
                     try {
                         // 音声解放を最初に実行
                         await this.unlockAudio();
                         
-                        // デフォルトでタッチ操作を設定してゲーム開始
-                        this.setupTouchControls();
-                        this.startIntro();
+                        // 操作方法選択画面を表示
+                        this.showGyroPermissionButton();
                         
                     } catch (error) {
                         console.error('❌ スタートボタンイベントエラー:', error);
                         alert('エラーが発生しました: ' + error.message);
+                    } finally {
+                        startButtonProcessing = false;
                     }
                 };
                 
-                // タッチとクリック両方に対応
+                // タッチとクリック両方に対応（重複防止）
                 startButton.addEventListener('click', handleStartClick);
                 startButton.addEventListener('touchstart', (e) => {
                     e.preventDefault(); // デフォルトのタッチ動作を防ぐ
