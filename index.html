@@ -776,15 +776,12 @@
                 const startButton = document.getElementById('startButton');
                 const handleStartClick = async (e) => {
                     try {
-                        // デバッグログ更新（安全に）
-                        const debugLog = document.getElementById('debugLog');
-                        if (debugLog) {
-                            debugLog.textContent = 'スタートボタンクリック';
-                        }
-                        
                         // 音声解放を最初に実行
                         await this.unlockAudio();
-                        this.requestGyroPermission();
+                        
+                        // デフォルトでタッチ操作を設定してゲーム開始
+                        this.setupTouchControls();
+                        this.startIntro();
                         
                     } catch (error) {
                         console.error('❌ スタートボタンイベントエラー:', error);
