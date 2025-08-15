@@ -557,11 +557,7 @@
                     document.getElementById('debugInfo').style.display = 'block';
                 }
                 
-                this.setupEventListeners();
-                this.loadAssets();
-                this.loadAudio();
-                
-                // 仮想ジョイスティック
+                // 仮想ジョイスティック初期化（イベントリスナーより先に）
                 this.virtualJoystick = {
                     active: false,
                     centerX: 0,
@@ -570,6 +566,10 @@
                     currentY: 0,
                     maxDistance: 35 // 内側の円が移動できる最大距離
                 };
+                
+                this.setupEventListeners();
+                this.loadAssets();
+                this.loadAudio();
                 this.setupVirtualJoystick();
             }
 
@@ -2094,7 +2094,22 @@
 
         // ゲーム開始
         window.addEventListener('load', () => {
+            console.log('🚀 ページ読み込み完了');
+            
+            // 緊急用：直接スタートボタンにイベントリスナーを追加
+            const startBtn = document.getElementById('startButton');
+            if (startBtn) {
+                console.log('✅ スタートボタン要素発見');
+                startBtn.addEventListener('click', () => {
+                    console.log('🖱️ 緊急用スタートボタンクリック検出');
+                });
+            } else {
+                console.error('❌ スタートボタン要素が見つかりません');
+            }
+            
             const game = new KumorinGame();
+            console.log('🎮 ゲームインスタンス作成完了');
+            
             // タイトル画面表示時に音楽再生
             game.playAudio('title');
         });
