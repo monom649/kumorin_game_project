@@ -404,6 +404,20 @@
             <div id="sodaOjisan"></div>
         </div>
 
+        <!-- ジャイロ操作案内画面 -->
+        <div id="gyroTutorialScreen" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1600; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white; font-size: 48px;">
+            <div style="margin-bottom: 40px;">
+                📱 操作方法
+            </div>
+            <div style="margin-bottom: 40px;">
+                <img id="tutorialGif" src="https://i.imgur.com/Wnnr1Yv.gif" alt="操作案内" style="width: 300px; height: auto; border-radius: 10px; border: 3px solid #ffff00;">
+            </div>
+            <div style="font-size: 36px; color: #ffff00; line-height: 1.4;">
+                スマートフォンを傾けて<br>
+                くもりんを操作しよう！
+            </div>
+        </div>
+
         <!-- ゲーム画面 -->
         <div id="gameScreen">
             <canvas id="gameCanvas"></canvas>
@@ -1789,6 +1803,7 @@
                 document.getElementById('gameScreen').style.display = 'none';
                 document.getElementById('gameOverScreen').style.display = 'none';
                 document.getElementById('gyroPermissionScreen').style.display = 'none';
+                document.getElementById('gyroTutorialScreen').style.display = 'none';
                 document.getElementById('titleScreen').style.display = 'flex';
                 this.gameState = 'title';
                 
@@ -1839,6 +1854,25 @@
                 document.getElementById('gyroPermissionScreen').style.display = 'none';
             }
             
+            showGyroTutorial() {
+                console.log('📱 ジャイロ操作案内を表示');
+                document.getElementById('gyroTutorialScreen').style.display = 'flex';
+                
+                // 29.97fps換算で3秒15フレーム = 約3.5秒間表示
+                const displayDuration = Math.round((3 + 15/29.97) * 1000); // 3.5秒
+                console.log(`⏱️ チュートリアル表示時間: ${displayDuration}ms`);
+                
+                setTimeout(() => {
+                    this.hideGyroTutorial();
+                    this.startIntro();
+                }, displayDuration);
+            }
+            
+            hideGyroTutorial() {
+                console.log('📱 ジャイロ操作案内を非表示');
+                document.getElementById('gyroTutorialScreen').style.display = 'none';
+            }
+            
             async handleGyroPermissionClick() {
                 console.log('🎯 ユーザージェスチャー内で許可要求を開始');
                 
@@ -1853,7 +1887,7 @@
                             console.log('🎉 ジャイロセンサー許可取得成功');
                             this.hideGyroPermissionScreen();
                             this.setupGyro();
-                            this.startIntro();
+                            this.showGyroTutorial(); // チュートリアル表示
                         } else {
                             console.log('❌ ジャイロセンサー許可拒否:', response);
                             alert(`センサー許可が拒否されました: ${response}\n\nタップ操作でプレイします。`);
