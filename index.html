@@ -827,8 +827,9 @@
             setupEventListeners() {
                 console.log('🔧 setupEventListeners 開始');
                 
-                // スタートボタン
-                document.getElementById('startButton').addEventListener('click', async () => {
+                // スタートボタン（タッチとクリック両対応）
+                const startButton = document.getElementById('startButton');
+                const handleStartClick = async (e) => {
                     try {
                         console.log('🖱️ スタートボタンクリック検出');
                         
@@ -851,42 +852,79 @@
                         console.error('❌ スタートボタンイベントエラー:', error);
                         alert('エラーが発生しました: ' + error.message);
                     }
+                };
+                
+                // タッチとクリック両方に対応
+                startButton.addEventListener('click', handleStartClick);
+                startButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // デフォルトのタッチ動作を防ぐ
+                    handleStartClick(e);
                 });
 
-                // リトライボタン
-                document.getElementById('retryButton').addEventListener('click', async () => {
+                // リトライボタン（タッチとクリック両対応）
+                const retryButton = document.getElementById('retryButton');
+                const handleRetryClick = async () => {
                     // 音声解放を確実に実行
                     await this.unlockAudio();
                     this.startGame();
+                };
+                retryButton.addEventListener('click', handleRetryClick);
+                retryButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleRetryClick();
                 });
 
-                // シェアボタン
-                document.getElementById('shareButton').addEventListener('click', () => {
+                // シェアボタン（タッチとクリック両対応）
+                const shareButton = document.getElementById('shareButton');
+                const handleShareClick = () => {
                     this.shareScore();
+                };
+                shareButton.addEventListener('click', handleShareClick);
+                shareButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleShareClick();
                 });
 
-                // タイトルボタン
-                document.getElementById('titleButton').addEventListener('click', () => {
+                // タイトルボタン（タッチとクリック両対応）
+                const titleButton = document.getElementById('titleButton');
+                const handleTitleClick = () => {
                     this.showTitleScreen();
+                };
+                titleButton.addEventListener('click', handleTitleClick);
+                titleButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleTitleClick();
                 });
 
 
-                // ジャイロ許可ボタン
-                document.getElementById('gyroPermissionButton').addEventListener('click', async () => {
+                // ジャイロ許可ボタン（タッチとクリック両対応）
+                const gyroPermissionButton = document.getElementById('gyroPermissionButton');
+                const handleGyroPermissionClick = async () => {
                     console.log('🖱️ ジャイロ許可ボタンがクリックされました（ユーザージェスチャー）');
                     // 音声解放を最初に実行
                     await this.unlockAudio();
                     await this.handleGyroPermissionClick();
+                };
+                gyroPermissionButton.addEventListener('click', handleGyroPermissionClick);
+                gyroPermissionButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleGyroPermissionClick();
                 });
 
-                // ジャイロスキップボタン
-                document.getElementById('gyroSkipButton').addEventListener('click', async () => {
+                // ジャイロスキップボタン（タッチとクリック両対応）
+                const gyroSkipButton = document.getElementById('gyroSkipButton');
+                const handleGyroSkipClick = async () => {
                     console.log('🖱️ ジャイロスキップボタンがクリックされました');
                     // 音声解放を最初に実行
                     await this.unlockAudio();
                     this.hideGyroPermissionScreen();
                     this.setupTouchControls();
                     this.startIntro();
+                };
+                gyroSkipButton.addEventListener('click', handleGyroSkipClick);
+                gyroSkipButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleGyroSkipClick();
                 });
 
                 console.log('✅ setupEventListeners 完了');
