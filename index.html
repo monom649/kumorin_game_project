@@ -1100,28 +1100,32 @@
                             console.log('AudioContext resume完了:', this.audioContext.state);
                         }
                         
-                        // 1つの音声ファイルだけで解放テスト（最も軽いファイルを使用）
-                        if (this.audio && this.audio.soda) {
-                            try {
-                                const audio = this.audio.soda;
-                                const originalVolume = audio.volume;
-                                audio.volume = 0.001; // 極小音量
-                                
-                                const playPromise = audio.play();
-                                if (playPromise) {
-                                    await playPromise.then(() => {
-                                        audio.pause();
-                                        audio.currentTime = 0;
-                                        audio.volume = originalVolume;
-                                        console.log('✅ 音声unlock成功');
-                                    }).catch(e => {
-                                        audio.volume = originalVolume;
-                                        console.log('⚠️ 音声unlock失敗:', e.message);
-                                    });
+                        // 全音声ファイルを並列で高速解放
+                        if (this.audio) {
+                            const unlockPromises = Object.entries(this.audio).map(async ([name, audio]) => {
+                                try {
+                                    const originalVolume = audio.volume;
+                                    audio.volume = 0.001; // 極小音量
+                                    
+                                    const playPromise = audio.play();
+                                    if (playPromise) {
+                                        return playPromise.then(() => {
+                                            audio.pause();
+                                            audio.currentTime = 0;
+                                            audio.volume = originalVolume;
+                                            console.log(`✅ ${name} unlock成功`);
+                                        }).catch(e => {
+                                            audio.volume = originalVolume;
+                                            console.log(`⚠️ ${name} unlock失敗:`, e.message);
+                                        });
+                                    }
+                                } catch (e) {
+                                    console.log(`⚠️ ${name} 処理エラー:`, e.message);
                                 }
-                            } catch (e) {
-                                console.log('⚠️ 音声unlock処理エラー:', e.message);
-                            }
+                            });
+                            
+                            // 全音声の解放を並列で実行（高速化）
+                            await Promise.allSettled(unlockPromises);
                         }
                         
                         this.audioUnlocked = true;
