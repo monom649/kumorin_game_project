@@ -772,34 +772,38 @@
 
             setupEventListeners() {
                 
-                // スタートボタン（タッチとクリック両対応）
+                // スタートボタン（タッチ優先、クリックは補助）
                 const startButton = document.getElementById('startButton');
-                let startButtonProcessing = false;
                 
                 const handleStartClick = async (e) => {
-                    if (startButtonProcessing) return; // 重複実行防止
-                    startButtonProcessing = true;
-                    
+                    console.log('🎯 スタートボタンクリック検出');
                     try {
                         // 音声解放を最初に実行
                         await this.unlockAudio();
+                        console.log('✅ 音声解放完了、画面遷移開始');
                         
                         // 操作方法選択画面を表示
                         this.showGyroPermissionButton();
+                        console.log('✅ 操作選択画面表示完了');
                         
                     } catch (error) {
                         console.error('❌ スタートボタンイベントエラー:', error);
                         alert('エラーが発生しました: ' + error.message);
-                    } finally {
-                        startButtonProcessing = false;
                     }
                 };
                 
-                // タッチとクリック両方に対応（重複防止）
-                startButton.addEventListener('click', handleStartClick);
-                startButton.addEventListener('touchstart', (e) => {
-                    e.preventDefault(); // デフォルトのタッチ動作を防ぐ
+                // モバイル向けタッチイベント（メイン）
+                startButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
                     handleStartClick(e);
+                });
+                
+                // デスクトップ向けクリックイベント（補助）
+                startButton.addEventListener('click', (e) => {
+                    // タッチデバイスでない場合のみ実行
+                    if (!('ontouchstart' in window)) {
+                        handleStartClick(e);
+                    }
                 });
 
                 // リトライボタン（タッチとクリック両対応）
