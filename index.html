@@ -809,36 +809,59 @@
                 // リトライボタン（タッチとクリック両対応）
                 const retryButton = document.getElementById('retryButton');
                 const handleRetryClick = async () => {
+                    console.log('🔄 リトライボタンクリック');
                     // 音声解放を確実に実行
                     await this.unlockAudio();
                     this.startGame();
                 };
-                retryButton.addEventListener('click', handleRetryClick);
-                retryButton.addEventListener('touchstart', (e) => {
+                
+                retryButton.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     handleRetryClick();
+                });
+                
+                retryButton.addEventListener('click', (e) => {
+                    if (!('ontouchstart' in window)) {
+                        handleRetryClick();
+                    }
                 });
 
                 // シェアボタン（タッチとクリック両対応）
                 const shareButton = document.getElementById('shareButton');
                 const handleShareClick = () => {
+                    console.log('🔗 シェアボタンクリック');
                     this.shareScore();
                 };
-                shareButton.addEventListener('click', handleShareClick);
-                shareButton.addEventListener('touchstart', (e) => {
+                
+                // モバイル向けタッチイベント
+                shareButton.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     handleShareClick();
+                });
+                
+                // デスクトップ向けクリックイベント
+                shareButton.addEventListener('click', (e) => {
+                    if (!('ontouchstart' in window)) {
+                        handleShareClick();
+                    }
                 });
 
                 // タイトルボタン（タッチとクリック両対応）
                 const titleButton = document.getElementById('titleButton');
                 const handleTitleClick = () => {
+                    console.log('🏠 タイトルボタンクリック');
                     this.showTitleScreen();
                 };
-                titleButton.addEventListener('click', handleTitleClick);
-                titleButton.addEventListener('touchstart', (e) => {
+                
+                titleButton.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     handleTitleClick();
+                });
+                
+                titleButton.addEventListener('click', (e) => {
+                    if (!('ontouchstart' in window)) {
+                        handleTitleClick();
+                    }
                 });
 
 
@@ -850,10 +873,15 @@
                     await this.unlockAudio();
                     await this.handleGyroPermissionClick();
                 };
-                gyroPermissionButton.addEventListener('click', handleGyroPermissionClick);
-                gyroPermissionButton.addEventListener('touchstart', (e) => {
+                gyroPermissionButton.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     handleGyroPermissionClick();
+                });
+                
+                gyroPermissionButton.addEventListener('click', (e) => {
+                    if (!('ontouchstart' in window)) {
+                        handleGyroPermissionClick();
+                    }
                 });
 
                 // ジャイロスキップボタン（タッチとクリック両対応）
@@ -866,10 +894,15 @@
                     this.setupTouchControls();
                     this.startIntro();
                 };
-                gyroSkipButton.addEventListener('click', handleGyroSkipClick);
-                gyroSkipButton.addEventListener('touchstart', (e) => {
+                gyroSkipButton.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     handleGyroSkipClick();
+                });
+                
+                gyroSkipButton.addEventListener('click', (e) => {
+                    if (!('ontouchstart' in window)) {
+                        handleGyroSkipClick();
+                    }
                 });
 
                 // 固定サイズなのでリサイズイベントは不要
