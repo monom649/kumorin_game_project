@@ -1133,8 +1133,6 @@
 
             async unlockAudio() {
                 console.log('🔓 unlockAudio() 開始 - 現在の状態:', this.audioUnlocked);
-                document.getElementById('debugLog').textContent = 'unlockAudio開始';
-                document.getElementById('audioStatus').textContent = this.audioUnlocked ? '解放済み' : '未解放';
                 
                 if (!this.audioUnlocked) {
                     try {
@@ -1150,45 +1148,38 @@
                             console.log('AudioContext resume完了:', this.audioContext.state);
                         }
                         
-                        // HTML Audio要素も解放
-                        if (this.audio) {
-                            for (const [name, audio] of Object.entries(this.audio)) {
-                                try {
-                                    // 各音声に触れる（load()メソッドを呼ぶ）
-                                    audio.load();
-                                    
-                                    // 一瞬だけ再生を試行
-                                    const originalVolume = audio.volume;
-                                    audio.volume = 0.01; // 最小音量
-                                    
-                                    const playPromise = audio.play();
-                                    if (playPromise) {
-                                        playPromise.then(() => {
-                                            audio.pause();
-                                            audio.currentTime = 0;
-                                            audio.volume = originalVolume;
-                                            console.log(`✅ ${name} unlock成功`);
-                                        }).catch(e => {
-                                            audio.volume = originalVolume;
-                                            console.log(`⚠️ ${name} unlock失敗:`, e.message);
-                                        });
-                                    }
-                                } catch (e) {
-                                    console.log(`⚠️ ${name} 処理エラー:`, e.message);
+                        // 1つの音声ファイルだけで解放テスト（最も軽いファイルを使用）
+                        if (this.audio && this.audio.soda) {
+                            try {
+                                const audio = this.audio.soda;
+                                const originalVolume = audio.volume;
+                                audio.volume = 0.001; // 極小音量
+                                
+                                const playPromise = audio.play();
+                                if (playPromise) {
+                                    await playPromise.then(() => {
+                                        audio.pause();
+                                        audio.currentTime = 0;
+                                        audio.volume = originalVolume;
+                                        console.log('✅ 音声unlock成功');
+                                    }).catch(e => {
+                                        audio.volume = originalVolume;
+                                        console.log('⚠️ 音声unlock失敗:', e.message);
+                                    });
                                 }
+                            } catch (e) {
+                                console.log('⚠️ 音声unlock処理エラー:', e.message);
                             }
                         }
                         
                         this.audioUnlocked = true;
-                        console.log('🔓 音声コンテキスト解放完了 (WebAudio) - audioUnlocked:', this.audioUnlocked);
-                        document.getElementById('debugLog').textContent = '音声解放完了';
-                        document.getElementById('audioStatus').textContent = '解放済み';
+                        console.log('🔓 音声コンテキスト解放完了');
                         
                     } catch (error) {
                         console.error('音声解放エラー:', error);
                     }
                 } else {
-                    console.log('🔓 音声は既に解放済み - audioUnlocked:', this.audioUnlocked);
+                    console.log('🔓 音声は既に解放済み');
                 }
             }
 
