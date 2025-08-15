@@ -877,56 +877,8 @@
                     return;
                 }
                 
-                // まずユーザーに説明を表示
-                const userAgent = navigator.userAgent;
-                const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-                
-                console.log('🔍 デバイス・環境情報:', {
-                    userAgent: userAgent,
-                    isIOS: isIOS,
-                    protocol: location.protocol,
-                    hostname: location.hostname,
-                    DeviceOrientationEvent: typeof DeviceOrientationEvent,
-                    requestPermission: typeof DeviceOrientationEvent?.requestPermission
-                });
-                
-                if (isIOS) {
-                    // iOSの場合は専用ボタンを表示してユーザージェスチャーを確保
-                    this.showGyroPermissionButton();
-                    return;
-                }
-                
-                // ジャイロセンサーが使用可能かチェック
-                if (window.DeviceOrientationEvent) {
-                    console.log('✅ DeviceOrientationEvent対応デバイス検出');
-                    
-                    // iOS13以降の許可システム
-                    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                        console.log('📱 iOS 13+ 検出 - 許可要求実行');
-                        
-                        // 許可要求を実行
-                        this.requestPermissionWithRetry();
-                        
-                    } else {
-                        // Android または古いiOS
-                        console.log('🤖 Android または古いiOS検出');
-                        
-                        // iOSだが古いバージョンの場合は警告
-                        if (isIOS) {
-                            alert('⚠️ 古いiOSバージョンが検出されました。\n\niOS 13以降での利用を推奨します。\n\nタップ操作でプレイします。');
-                            this.setupTouchControls();
-                            this.startIntro();
-                        } else {
-                            this.setupGyro();
-                            this.startIntro();
-                        }
-                    }
-                } else {
-                    console.log('❌ ジャイロセンサー非対応デバイス');
-                    alert('このデバイスはジャイロセンサーに対応していません。タップ操作でプレイします。');
-                    this.setupTouchControls();
-                    this.startIntro();
-                }
+                // 直接コントロール選択画面を表示
+                this.showGyroPermissionButton();
             }
             
 
