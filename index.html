@@ -1235,7 +1235,7 @@
             }
 
             updatePlayerMovement() {
-                const baseSpeed = 15; // 8から15に増加
+                const baseSpeed = 12; // 15から12に調整（滑らかな操作感）
                 const moveSpeed = baseSpeed * this.speedMultiplier; // スピードアップ適用
                 
                 // デバッグ: スピード情報をコンソールに表示
@@ -1268,10 +1268,10 @@
                     const relativeBeta = beta - this.gyroBaseline.beta;
                     const relativeGamma = gamma - this.gyroBaseline.gamma;
                     
-                    // 感度を左右と上下で別々に調整（より敏感に）
-                    const gammaSensitivity = 10; // 左右の感度（15→10に変更）
-                    const betaSensitivityUp = 18; // 上移動の感度（25→18に変更）
-                    const betaSensitivityDown = 8; // 下移動の感度（12→8に変更）
+                    // 感度を左右と上下で別々に調整（滑らかな操作感）
+                    const gammaSensitivity = 8; // 左右の感度（10→8に変更）
+                    const betaSensitivityUp = 15; // 上移動の感度（18→15に変更）
+                    const betaSensitivityDown = 12; // 下移動の感度（8→12に変更）
                     
                     // 左右移動（Gamma値: 左右の傾き）
                     if (relativeGamma < -gammaSensitivity) {
