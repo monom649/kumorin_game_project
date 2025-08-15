@@ -22,9 +22,30 @@
                 console.log('🟢 スタートボタン検索結果:', btn);
                 if (btn) {
                     alert('緊急テスト: スタートボタン発見！');
+                    
+                    // 視覚的テスト：ボタンを赤くして目立たせる
+                    btn.style.backgroundColor = 'red';
+                    btn.style.border = '5px solid yellow';
+                    btn.style.zIndex = '99999';
+                    
+                    // 複数のイベントリスナーでテスト
                     btn.onclick = function() {
-                        alert('緊急テスト: スタートボタンクリック成功！');
+                        alert('緊急テスト: onclick成功！');
                     };
+                    
+                    btn.addEventListener('click', function() {
+                        alert('緊急テスト: addEventListener成功！');
+                    });
+                    
+                    btn.addEventListener('touchstart', function() {
+                        alert('緊急テスト: touchstart成功！');
+                    });
+                    
+                    // マウス位置テスト
+                    btn.addEventListener('mouseenter', function() {
+                        console.log('マウスがボタン上に来ました');
+                    });
+                    
                 } else {
                     alert('緊急テスト: スタートボタンが見つかりません！');
                 }
@@ -96,6 +117,7 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            z-index: 1000;
         }
 
 
@@ -119,6 +141,9 @@
             border-radius: 20px; /* 10px × 2.0 = 20px */
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 9999;
+            pointer-events: auto;
         }
 
         #startButton:hover {
