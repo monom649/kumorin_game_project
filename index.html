@@ -442,7 +442,7 @@
             <div id="kumorinGif"></div>
             <button id="startButton">スタート</button>
             <div class="copyright">© 2025 株式会社aquwa. All rights reserved.</div>
-            <div class="version-info">v1.2.0</div>
+            <div class="version-info">v1.2.1</div>
         </div>
 
         <!-- ジャイロ許可画面 -->
@@ -823,7 +823,12 @@
                     console.log('🔄 リトライボタンクリック');
                     // 音声解放を確実に実行
                     await this.unlockAudio();
-                    this.startGame();
+                    
+                    // 操作状態をリセット
+                    this.resetControlModes();
+                    
+                    // 操作選択画面に戻る
+                    this.showGyroPermissionButton();
                 };
                 
                 retryButton.addEventListener('touchend', (e) => {
@@ -936,10 +941,11 @@
             setupGyro() {
                 console.log('ジャイロセンサー設定開始');
                 
+                // イベントハンドラーをbindして保存（後で削除できるように）
+                this.gyroHandler = this.handleGyroData.bind(this);
+                
                 // 回転や傾きの変化を検知する「deviceorientation」を使う
-                window.addEventListener('deviceorientation', (event) => {
-                    this.handleGyroData(event);
-                });
+                window.addEventListener('deviceorientation', this.gyroHandler);
                 
                 console.log('ジャイロセンサー設定完了');
             }
@@ -990,6 +996,31 @@
                     // キャリブレーションデータをクリア
                     this.calibrationData = null;
                 }
+            }
+
+            resetControlModes() {
+                console.log('🔄 操作モードをリセット中...');
+                
+                // タッチ操作フラグをリセット
+                this.touchControls = false;
+                
+                // ジョイスティックを非表示
+                const joystick = document.getElementById('virtualJoystick');
+                if (joystick) {
+                    joystick.style.display = 'none';
+                }
+                
+                // ジャイロセンサーのイベントリスナーを削除
+                if (this.gyroHandler) {
+                    window.removeEventListener('deviceorientation', this.gyroHandler);
+                    this.gyroHandler = null;
+                }
+                
+                // ゲーム画面を非表示
+                document.getElementById('gameScreen').style.display = 'none';
+                document.getElementById('gameOverScreen').style.display = 'none';
+                
+                console.log('✅ 操作モードリセット完了');
             }
 
             // タッチ操作の代替設定
