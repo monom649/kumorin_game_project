@@ -1,0 +1,2149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="permissions" content="gyroscope=(), accelerometer=()">
+    <title>くもりんとばし</title>
+    <style>
+        /* カスタムフォント読み込み */
+        @font-face {
+            font-family: 'Panda Bakery';
+            src: url('https://www.dropbox.com/scl/fi/9snf9hz532423zfyjtfwf/pandabakery.woff2?rlkey=uyctpbkzzngmg82bscy94hqkv&st=yp01x425&raw=1') format('woff2');
+            font-display: swap;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Panda Bakery', Arial, sans-serif;
+            background: #000;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ゲームコンテナ: 縦1920×横1080の縦向きゲーム */
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+
+        /* 縦向き固定 */
+        @media screen and (orientation: landscape) {
+            body::before {
+                content: '画面を縦向きにしてください';
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: white;
+                font-size: 24px;
+                z-index: 9999;
+                background: rgba(0,0,0,0.8);
+                padding: 20px;
+                border-radius: 10px;
+            }
+        }
+
+        /* タイトル画面 */
+        #titleScreen {
+            width: 100%;
+            height: 100%;
+            background-image: url('https://i.imgur.com/yuOkMHz.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 1000;
+        }
+
+
+        #kumorinGif {
+            width: 500px;
+            height: 500px;
+            background-image: url('https://i.imgur.com/0hQMgso.gif');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        #startButton {
+            margin-top: 20px;
+            padding: 20px 40px; /* パディングを半分に縮小 */
+            font-size: 48px; /* 24px × 2.0 = 48px */
+            font-family: 'Panda Bakery', Arial, sans-serif;
+            background: #ff6b00;
+            color: white;
+            border: none;
+            border-radius: 20px; /* 10px × 2.0 = 20px */
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 9999;
+            pointer-events: auto;
+        }
+
+        #startButton:hover {
+            background: #e55a00;
+        }
+
+        /* 導入演出画面 */
+        #introScreen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #kumorinIntro {
+            position: absolute;
+            bottom: 270px; /* ソーダおじさんの上部に合わせる（さらに20px下げる） */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px; /* 適度なサイズに縮小 */
+            height: 150px;
+            background-image: url('https://i.imgur.com/0hQMgso.gif');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 3; /* ソーダおじさんより前面 */
+        }
+
+        #sodaOjisan {
+            position: absolute;
+            bottom: -400px; /* 400pxサイズに合わせて調整 */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px; /* 元のサイズに戻す */
+            height: 400px;
+            background-image: url('https://i.imgur.com/4aHLhwq.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 2;
+            /* デバッグ用の枠線を削除 */
+        }
+
+        /* ゲーム画面 */
+        #gameScreen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+            display: block;
+        }
+
+        /* ゲーム中のくもりんGIF */
+        #kumorinPlayer {
+            position: absolute;
+            width: 300px; /* ゲームプレイ時は元のサイズ */
+            height: 300px;
+            background-image: url('https://i.imgur.com/0hQMgso.gif');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* 導入シーン中はくもりんを小さく */
+        #introScreen #kumorinPlayer {
+            width: 80px; /* さらに小さく（画面に収める） */
+            height: 80px;
+        }
+
+        /* UI要素 */
+        #gameUI {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #distanceDisplay {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 96px; /* 48px × 2.0 = 96px */
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #bananaCounter {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            display: none; /* バナナアイコンを非表示 */
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+
+        #bananaIcons {
+            display: flex;
+            gap: 10px;
+        }
+
+        #speedGuide {
+            position: absolute;
+            top: 90px; /* 距離表示の直下20px間隔に調整 */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 48px; /* デフォルト、JSで上書きされる */
+            font-weight: bold;
+            color: #ffff00;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px; /* 8px × 1.5 = 12px */
+            white-space: nowrap; /* テキストの折り返しを防ぐ */
+        }
+
+        #speedGuide .banana-inline {
+            width: 39px; /* 正しいアスペクト比を保持 */
+            height: 24px; /* 1041:642 ≈ 1.62:1 */
+            background-image: url('https://i.imgur.com/n4B27qz.jpg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: inline-block;
+        }
+
+        #debugInfo {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            color: white;
+            font-size: 14px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: none;
+            z-index: 9999;
+        }
+
+
+        .banana-icon {
+            width: 52px; /* 正しいアスペクト比を保持 */
+            height: 32px; /* 1041:642 ≈ 1.62:1 */
+            background-image: url('https://i.imgur.com/n4B27qz.jpg');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .copyright {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            font-family: 'Panda Bakery', Arial, sans-serif;
+            text-align: center;
+            line-height: 1.2;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        /* 仮想ジョイスティック */
+        #virtualJoystick {
+            position: absolute;
+            bottom: 100px;
+            right: 50px;
+            width: 120px;
+            height: 120px;
+            display: none;
+            z-index: 2000;
+        }
+
+        .joystick-outer {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            touch-action: none;
+        }
+
+        .joystick-inner {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s ease;
+            pointer-events: none;
+        }
+
+        /* ゲームオーバー画面 */
+        #gameOverScreen {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 20;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
+
+        #finalDistance {
+            font-size: 48px; /* 適度なサイズに縮小 */
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .button {
+            margin: 20px; /* 10px × 2.0 = 20px */
+            padding: 30px 60px; /* 15px×2.0, 30px×2.0 */
+            font-size: 40px; /* 20px × 2.0 = 40px */
+            font-family: 'Panda Bakery', Arial, sans-serif;
+            background: #ff6b00;
+            color: white;
+            border: none;
+            border-radius: 10px; /* 5px × 2.0 = 10px */
+            cursor: pointer;
+        }
+
+        /* アニメーション定義 */
+        @keyframes slideUp {
+            from { 
+                bottom: -400px;
+            }
+            to { 
+                bottom: -65px; /* ソーダおじさんを15px上げる */
+            }
+        }
+
+        @keyframes flyAway {
+            from { 
+                bottom: 270px;
+                transform: translateX(-50%) scale(1);
+                opacity: 1;
+            }
+            to { 
+                bottom: 1400px; /* 画面上部へ飛んでいく */
+                transform: translateX(-50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from { 
+                bottom: -65px;
+            }
+            to { 
+                bottom: -400px; /* 元の位置まで下降 */
+            }
+        }
+
+        .soda-entrance {
+            animation: slideUp 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .soda-exit {
+            animation: slideDown 1.5s ease-out forwards;
+        }
+
+        .kumorin-flyout {
+            animation: flyAway 1.5s ease-out forwards;
+        }
+
+        /* 画面揺れエフェクト */
+        @keyframes screenShake {
+            0% { transform: translate(0, 0); }
+            10% { transform: translate(-5px, -2px); }
+            20% { transform: translate(5px, 2px); }
+            30% { transform: translate(-3px, 0px); }
+            40% { transform: translate(3px, -1px); }
+            50% { transform: translate(-2px, 2px); }
+            60% { transform: translate(2px, 1px); }
+            70% { transform: translate(-1px, -1px); }
+            80% { transform: translate(1px, 2px); }
+            90% { transform: translate(-1px, 0px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .shake {
+            animation: screenShake 0.5s ease-in-out;
+        }
+
+        /* くもりん死亡時の回転落下アニメーション */
+        @keyframes kumorinDeath {
+            0% { 
+                transform: translateX(-50%) translateY(-50%) rotate(0deg);
+                opacity: 1;
+            }
+            100% { 
+                transform: translateX(-50%) translateY(800px) rotate(180deg);
+                opacity: 0.7;
+            }
+        }
+
+        .kumorin-death {
+            animation: kumorinDeath 1.0s ease-in forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="gameContainer">
+        <!-- タイトル画面 -->
+        <div id="titleScreen">
+            <div id="kumorinGif"></div>
+            <button id="startButton">スタート</button>
+            <div class="copyright">© 2025 株式会社aquwa. All rights reserved.</div>
+        </div>
+
+        <!-- ジャイロ許可画面 -->
+        <div id="gyroPermissionScreen" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1500; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white; font-size: 48px;">
+            <div style="margin-bottom: 80px;">
+                🎮 くもりんをどっちで動かす？
+            </div>
+            <button id="gyroPermissionButton" style="padding: 30px 60px; font-size: 40px; background: #ff6b00; color: white; border: none; border-radius: 20px; cursor: pointer; font-family: 'Panda Bakery', Arial, sans-serif; margin-bottom: 30px; width: 300px;">
+                かたむける
+            </button>
+            <button id="gyroSkipButton" style="padding: 30px 40px; font-size: 32px; background: #4a90e2; color: white; border: none; border-radius: 20px; cursor: pointer; font-family: 'Panda Bakery', Arial, sans-serif; width: 300px;">
+                タッチで動かす
+            </button>
+        </div>
+
+        <!-- 導入演出画面 -->
+        <div id="introScreen">
+            <div id="kumorinIntro"></div>
+            <div id="sodaOjisan"></div>
+        </div>
+
+        <!-- ジャイロ操作案内画面 -->
+        <div id="gyroTutorialScreen" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1600; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+            <img id="tutorialGif" src="https://i.imgur.com/Wnnr1Yv.gif" alt="操作案内" style="width: 300px; height: auto; border-radius: 10px;">
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="gameScreen">
+            <canvas id="gameCanvas"></canvas>
+            <div id="kumorinPlayer"></div>
+            <div id="gameUI">
+                <div id="distanceDisplay">0m</div>
+                <div id="bananaCounter">
+                    <div id="bananaIcons"></div>
+                </div>
+                <div id="speedGuide">
+                    <div class="banana-inline"></div>でスピードアップ！
+                </div>
+                <div id="debugInfo">
+                    <div>ジャイロ: <span id="gyroStatus">未取得</span></div>
+                    <div>Alpha: <span id="alphaValue">0</span>°</div>
+                    <div>Beta: <span id="betaValue">0</span>°</div>
+                    <div>Gamma: <span id="gammaValue">0</span>°</div>
+                    <div>操作: <span id="controlStatus">待機中</span></div>
+                    <div>スピード: <span id="speedStatus">×1.0</span></div>
+                    <div style="color: yellow;">音声: <span id="audioStatus">未解放</span></div>
+                    <div style="color: cyan;">最新: <span id="debugLog">-</span></div>
+                    <div style="color: orange;">ファイル: <span id="audioFileStatus">-</span></div>
+                    <div>バナナ: <span id="bananaStatus">0個</span></div>
+                </div>
+            </div>
+            <!-- 仮想ジョイスティック -->
+            <div id="virtualJoystick">
+                <div class="joystick-outer">
+                    <div class="joystick-inner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ゲームオーバー画面 -->
+        <div id="gameOverScreen">
+            <div style="font-size: 72px; color: white; margin: 20px 0; text-align: center; line-height: 1.1;">
+                くもりんは<br>
+                <span id="finalDistance">0m</span><br>
+                とんでった！
+            </div>
+            <div style="font-size: 58px; color: #ffff00; margin: 20px 0;">
+                🍌を<span id="finalBananas">0</span>本ゲットしたよ！
+            </div>
+            <button class="button" id="retryButton">もう一度プレイ</button>
+            <button class="button" id="shareButton">結果をシェア</button>
+            <button class="button" id="titleButton">タイトルに戻る</button>
+        </div>
+    </div>
+
+    <script>
+        // ゲームの基本設定
+        class KumorinGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                // 画面スケーリングの設定
+                this.setupScreenScale();
+                this.setupCanvas();
+                
+                // ゲーム状態
+                this.gameState = 'title'; // 'title', 'intro', 'playing', 'gameOver'
+                this.distance = 0;
+                this.bananaCount = 0;
+                this.speedMultiplier = 1.0;
+                
+                // 音声解放フラグ
+                this.audioUnlocked = false;
+                this.audioContext = null;
+                
+                // プレイヤー（くもりん）
+                this.player = {
+                    x: 0,
+                    y: 0,
+                    width: 300, /* ゲームプレイ時は元のサイズ */
+                    height: 300,
+                    img: new Image(),
+                    element: document.getElementById('kumorinPlayer')
+                };
+                
+                // 障害物配列
+                this.obstacles = [];
+                this.clouds = [];
+                this.bananas = [];
+                this.stars = []; // 宇宙空間の星々
+                this.obstacleElements = []; // HTML要素での障害物表示用
+                
+                // ジャイロセンサー
+                this.gyroData = { alpha: 0, beta: 0, gamma: 0 };
+                this.gyroBaseline = { beta: 0, gamma: 0 }; // 基準角度
+                this.isCalibrated = false;
+                
+                // デバッグモード（開発用）
+                this.debugMode = window.location.search.includes('debug=true');
+                if (this.debugMode) {
+                    document.getElementById('debugInfo').style.display = 'block';
+                }
+                
+                // 仮想ジョイスティック初期化（イベントリスナーより先に）
+                this.virtualJoystick = {
+                    active: false,
+                    centerX: 0,
+                    centerY: 0,
+                    currentX: 0,
+                    currentY: 0,
+                    maxDistance: 35 // 内側の円が移動できる最大距離
+                };
+                
+                this.setupEventListeners();
+                this.loadAssets();
+                this.loadAudio();
+                this.setupVirtualJoystick();
+            }
+
+            setupScreenScale() {
+                // 画面全体を使用するため、スケーリングは不要
+                // ゲーム座標系は1080×1920を維持し、実際の画面サイズに適応
+                this.screenWidth = window.innerWidth;
+                this.screenHeight = window.innerHeight;
+                this.scaleX = this.screenWidth / 1080;
+                this.scaleY = this.screenHeight / 1920;
+                
+                // UI要素用の統一スケールファクター（小さい方を使用してアスペクト比維持）
+                this.uiScale = Math.min(this.scaleX, this.scaleY);
+                
+                console.log(`📱 Screen: ${this.screenWidth}x${this.screenHeight}`);
+                console.log(`🎮 Scale: X=${this.scaleX.toFixed(3)} Y=${this.scaleY.toFixed(3)} UI=${this.uiScale.toFixed(3)}`);
+                
+                // UI要素にスケールを適用
+                this.applyUIScaling();
+                
+                // 画面サイズ変更時の対応
+                const updateScreenSize = () => {
+                    this.screenWidth = window.innerWidth;
+                    this.screenHeight = window.innerHeight;
+                    this.scaleX = this.screenWidth / 1080;
+                    this.scaleY = this.screenHeight / 1920;
+                    this.uiScale = Math.min(this.scaleX, this.scaleY);
+                    this.applyUIScaling();
+                };
+                
+                window.addEventListener('resize', updateScreenSize);
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(updateScreenSize, 100);
+                });
+            }
+            
+            applyUIScaling() {
+                // スマートフォン縦画面専用の固定サイズ（スケーリング無し）
+                
+                // タイトル画面要素
+                const kumorinGif = document.getElementById('kumorinGif');
+                if (kumorinGif) {
+                    kumorinGif.style.width = '200px';  // スマホに適したサイズ
+                    kumorinGif.style.height = '200px';
+                }
+                
+                const startButton = document.getElementById('startButton');
+                if (startButton) {
+                    startButton.style.fontSize = '36px';  // スマホで読みやすいサイズ
+                }
+                
+                // ゲーム中の表示要素
+                const distanceDisplay = document.getElementById('distanceDisplay');
+                if (distanceDisplay) {
+                    distanceDisplay.style.fontSize = '32px';
+                }
+                
+                const bananaCounter = document.getElementById('bananaCounter');
+                if (bananaCounter) {
+                    bananaCounter.style.fontSize = '24px';
+                }
+                
+                const speedGuide = document.getElementById('speedGuide');
+                if (speedGuide) {
+                    speedGuide.style.fontSize = '28px';  // 「とんでった！」と同じサイズ
+                    speedGuide.style.setProperty('font-size', '28px', 'important'); // CSSを上書き
+                }
+                
+                // ジャイロ許可画面
+                const gyroScreen = document.getElementById('gyroPermissionScreen');
+                if (gyroScreen) {
+                    const textDivs = gyroScreen.querySelectorAll('div');
+                    if (textDivs[0]) {
+                        textDivs[0].style.fontSize = '24px';
+                        textDivs[0].style.marginBottom = '20px';
+                    }
+                    if (textDivs[1]) {
+                        textDivs[1].style.fontSize = '18px';
+                        textDivs[1].style.marginBottom = '20px';
+                    }
+                    
+                    const gyroButton = document.getElementById('gyroPermissionButton');
+                    if (gyroButton) {
+                        gyroButton.style.fontSize = '32px';  // タップしやすいサイズ
+                        gyroButton.style.padding = '25px 50px';
+                        gyroButton.style.borderRadius = '15px';
+                    }
+                }
+                
+                // ゲームオーバー画面
+                const gameOverScreen = document.getElementById('gameOverScreen');
+                if (gameOverScreen) {
+                    const mainText = gameOverScreen.querySelector('div:first-child');
+                    if (mainText) {
+                        mainText.style.fontSize = '28px';  // 適度なサイズ
+                        mainText.style.margin = '10px 0';
+                    }
+                    
+                    const bananaText = gameOverScreen.querySelector('div:nth-child(2)');
+                    if (bananaText) {
+                        bananaText.style.fontSize = '20px';  // 控えめなサイズ
+                        bananaText.style.margin = '10px 0';
+                    }
+                    
+                    // ボタン群 - スマホで押しやすく、すべて表示
+                    const buttons = gameOverScreen.querySelectorAll('.button');
+                    buttons.forEach(button => {
+                        button.style.fontSize = '16px';
+                        button.style.padding = '10px 20px';
+                        button.style.margin = '5px';
+                    });
+                }
+                
+                // バナナアイコン
+                const bananaIcons = document.querySelectorAll('.banana-icon');
+                bananaIcons.forEach(icon => {
+                    icon.style.width = '52px';  // 正しいアスペクト比
+                    icon.style.height = '32px'; // 1041:642 ≈ 1.62:1
+                });
+                
+                const bananaInlines = document.querySelectorAll('.banana-inline');
+                bananaInlines.forEach(icon => {
+                    icon.style.width = '39px';  // 正しいアスペクト比
+                    icon.style.height = '24px'; // 1041:642 ≈ 1.62:1
+                });
+            }
+
+            setupCanvas() {
+                this.canvas.width = this.screenWidth;
+                this.canvas.height = this.screenHeight;
+            }
+
+            setupVirtualJoystick() {
+                try {
+                    const joystick = document.getElementById('virtualJoystick');
+                    const outer = joystick.querySelector('.joystick-outer');
+                    const inner = joystick.querySelector('.joystick-inner');
+                    
+                    if (!joystick || !outer || !inner) {
+                        console.error('仮想ジョイスティック要素が見つかりません');
+                        return;
+                    }
+                
+                const handleStart = (e) => {
+                    e.preventDefault();
+                    this.virtualJoystick.active = true;
+                    
+                    const rect = outer.getBoundingClientRect();
+                    this.virtualJoystick.centerX = rect.left + rect.width / 2;
+                    this.virtualJoystick.centerY = rect.top + rect.height / 2;
+                };
+                
+                const handleMove = (e) => {
+                    if (!this.virtualJoystick.active) return;
+                    e.preventDefault();
+                    
+                    const touch = e.touches ? e.touches[0] : e;
+                    const deltaX = touch.clientX - this.virtualJoystick.centerX;
+                    const deltaY = touch.clientY - this.virtualJoystick.centerY;
+                    
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    const maxDistance = this.virtualJoystick.maxDistance;
+                    
+                    if (distance <= maxDistance) {
+                        this.virtualJoystick.currentX = deltaX;
+                        this.virtualJoystick.currentY = deltaY;
+                    } else {
+                        const angle = Math.atan2(deltaY, deltaX);
+                        this.virtualJoystick.currentX = Math.cos(angle) * maxDistance;
+                        this.virtualJoystick.currentY = Math.sin(angle) * maxDistance;
+                    }
+                    
+                    // 内側の円の位置を更新
+                    inner.style.transform = `translate(calc(-50% + ${this.virtualJoystick.currentX}px), calc(-50% + ${this.virtualJoystick.currentY}px))`;
+                };
+                
+                const handleEnd = (e) => {
+                    e.preventDefault();
+                    this.virtualJoystick.active = false;
+                    this.virtualJoystick.currentX = 0;
+                    this.virtualJoystick.currentY = 0;
+                    
+                    // 内側の円を中央に戻す
+                    inner.style.transform = 'translate(-50%, -50%)';
+                };
+                
+                // タッチイベント
+                outer.addEventListener('touchstart', handleStart);
+                document.addEventListener('touchmove', handleMove);
+                document.addEventListener('touchend', handleEnd);
+                
+                // マウスイベント（デバッグ用）
+                outer.addEventListener('mousedown', handleStart);
+                document.addEventListener('mousemove', handleMove);
+                document.addEventListener('mouseup', handleEnd);
+                
+                } catch (error) {
+                    console.error('仮想ジョイスティック設定エラー:', error);
+                }
+            }
+
+            setupEventListeners() {
+                
+                // スタートボタン（タッチ優先、クリックは補助）
+                const startButton = document.getElementById('startButton');
+                
+                const handleStartClick = async (e) => {
+                    console.log('🎯 スタートボタンクリック検出');
+                    try {
+                        // 音声解放を最初に実行
+                        await this.unlockAudio();
+                        console.log('✅ 音声解放完了、画面遷移開始');
+                        
+                        // 操作方法選択画面を表示
+                        this.showGyroPermissionButton();
+                        console.log('✅ 操作選択画面表示完了');
+                        
+                    } catch (error) {
+                        console.error('❌ スタートボタンイベントエラー:', error);
+                        alert('エラーが発生しました: ' + error.message);
+                    }
+                };
+                
+                // モバイル向けタッチイベント（メイン）
+                startButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleStartClick(e);
+                });
+                
+                // デスクトップ向けクリックイベント（補助）
+                startButton.addEventListener('click', (e) => {
+                    // タッチデバイスでない場合のみ実行
+                    if (!('ontouchstart' in window)) {
+                        handleStartClick(e);
+                    }
+                });
+
+                // リトライボタン（タッチとクリック両対応）
+                const retryButton = document.getElementById('retryButton');
+                const handleRetryClick = async () => {
+                    console.log('🔄 リトライボタンクリック');
+                    // 音声解放を確実に実行
+                    await this.unlockAudio();
+                    this.startGame();
+                };
+                
+                retryButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleRetryClick();
+                });
+                
+                retryButton.addEventListener('click', (e) => {
+                    if (!('ontouchstart' in window)) {
+                        handleRetryClick();
+                    }
+                });
+
+                // シェアボタン（タッチとクリック両対応）
+                const shareButton = document.getElementById('shareButton');
+                const handleShareClick = () => {
+                    console.log('🔗 シェアボタンクリック');
+                    this.shareScore();
+                };
+                
+                // モバイル向けタッチイベント
+                shareButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleShareClick();
+                });
+                
+                // デスクトップ向けクリックイベント
+                shareButton.addEventListener('click', (e) => {
+                    if (!('ontouchstart' in window)) {
+                        handleShareClick();
+                    }
+                });
+
+                // タイトルボタン（タッチとクリック両対応）
+                const titleButton = document.getElementById('titleButton');
+                const handleTitleClick = () => {
+                    console.log('🏠 タイトルボタンクリック');
+                    this.showTitleScreen();
+                };
+                
+                titleButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleTitleClick();
+                });
+                
+                titleButton.addEventListener('click', (e) => {
+                    if (!('ontouchstart' in window)) {
+                        handleTitleClick();
+                    }
+                });
+
+
+                // ジャイロ許可ボタン（タッチとクリック両対応）
+                const gyroPermissionButton = document.getElementById('gyroPermissionButton');
+                const handleGyroPermissionClick = async () => {
+                    console.log('🖱️ ジャイロ許可ボタンがクリックされました（ユーザージェスチャー）');
+                    // 音声解放を最初に実行
+                    await this.unlockAudio();
+                    await this.handleGyroPermissionClick();
+                };
+                gyroPermissionButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleGyroPermissionClick();
+                });
+                
+                gyroPermissionButton.addEventListener('click', (e) => {
+                    if (!('ontouchstart' in window)) {
+                        handleGyroPermissionClick();
+                    }
+                });
+
+                // ジャイロスキップボタン（タッチとクリック両対応）
+                const gyroSkipButton = document.getElementById('gyroSkipButton');
+                const handleGyroSkipClick = async () => {
+                    console.log('🖱️ ジャイロスキップボタンがクリックされました');
+                    // 音声解放を最初に実行
+                    await this.unlockAudio();
+                    this.hideGyroPermissionScreen();
+                    this.setupTouchControls();
+                    this.startIntro();
+                };
+                gyroSkipButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleGyroSkipClick();
+                });
+                
+                gyroSkipButton.addEventListener('click', (e) => {
+                    if (!('ontouchstart' in window)) {
+                        handleGyroSkipClick();
+                    }
+                });
+
+                // 固定サイズなのでリサイズイベントは不要
+            }
+
+            requestGyroPermission() {
+                // HTTPSチェック
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                    alert('センサー許可にはHTTPS接続が必要です。\n\nタップ操作でプレイします。');
+                    this.setupTouchControls();
+                    this.startIntro();
+                    return;
+                }
+                
+                // 直接コントロール選択画面を表示
+                this.showGyroPermissionButton();
+            }
+            
+
+            setupGyro() {
+                console.log('ジャイロセンサー設定開始');
+                
+                // 回転や傾きの変化を検知する「deviceorientation」を使う
+                window.addEventListener('deviceorientation', (event) => {
+                    this.handleGyroData(event);
+                });
+                
+                console.log('ジャイロセンサー設定完了');
+            }
+
+            handleGyroData(event) {
+                // それぞれの値の小数点以下を切り捨てて格納
+                this.gyroData.beta = Math.floor(event.beta || 0);   // X軸（-90~270までの値）
+                this.gyroData.gamma = Math.floor(event.gamma || 0); // Y軸（-90~90までの値）
+                this.gyroData.alpha = Math.floor(event.alpha || 0); // Z軸（0~360までの値）
+                
+                // 初回キャリブレーション（3秒間の値を平均化）
+                if (!this.isCalibrated) {
+                    this.calibrateGyro();
+                }
+                
+                // デバッグUI更新（常に更新）
+                document.getElementById('gyroStatus').textContent = this.isCalibrated ? 'キャリブレ済み' : 'キャリブレ中...';
+                document.getElementById('alphaValue').textContent = this.gyroData.alpha;
+                document.getElementById('betaValue').textContent = this.gyroData.beta;
+                document.getElementById('gammaValue').textContent = this.gyroData.gamma;
+                document.getElementById('controlStatus').textContent = 'ジャイロ操作';
+            }
+
+            calibrateGyro() {
+                if (!this.calibrationData) {
+                    this.calibrationData = {
+                        betaSum: 0,
+                        gammaSum: 0,
+                        count: 0,
+                        startTime: Date.now()
+                    };
+                }
+                
+                // 3秒間データ収集
+                const elapsed = Date.now() - this.calibrationData.startTime;
+                if (elapsed < 3000) {
+                    this.calibrationData.betaSum += this.gyroData.beta;
+                    this.calibrationData.gammaSum += this.gyroData.gamma;
+                    this.calibrationData.count++;
+                } else {
+                    // 平均値を基準角度として設定
+                    this.gyroBaseline.beta = Math.round(this.calibrationData.betaSum / this.calibrationData.count);
+                    this.gyroBaseline.gamma = Math.round(this.calibrationData.gammaSum / this.calibrationData.count);
+                    this.isCalibrated = true;
+                    
+                    console.log(`🎯 ジャイロキャリブレーション完了: Beta基準=${this.gyroBaseline.beta}°, Gamma基準=${this.gyroBaseline.gamma}°`);
+                    
+                    // キャリブレーションデータをクリア
+                    this.calibrationData = null;
+                }
+            }
+
+            // タッチ操作の代替設定
+            setupTouchControls() {
+                console.log('タッチ操作設定中...');
+                this.touchControls = true;
+                
+                // 仮想ジョイスティックを表示
+                try {
+                    const joystick = document.getElementById('virtualJoystick');
+                    if (joystick) {
+                        joystick.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('仮想ジョイスティック表示エラー:', error);
+                }
+                
+                // 画面4方向タップで操作
+                const canvas = this.canvas;
+                canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = canvas.getBoundingClientRect();
+                    const x = touch.clientX - rect.left;
+                    const y = touch.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    // 中央からの距離で方向決定
+                    const deltaX = x - centerX;
+                    const deltaY = y - centerY;
+                    
+                    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                        // 左右方向
+                        if (deltaX < 0) {
+                            this.touchDirection = 'left';
+                        } else {
+                            this.touchDirection = 'right';
+                        }
+                    } else {
+                        // 上下方向
+                        if (deltaY < 0) {
+                            this.touchDirection = 'up';
+                        } else {
+                            this.touchDirection = 'down';
+                        }
+                    }
+                });
+                
+                canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.touchDirection = null;
+                });
+            }
+
+            loadAssets() {
+                // 画像の読み込み
+                this.player.img.src = 'https://i.imgur.com/0hQMgso.gif';
+                
+                // 他のアセットも同様に読み込み
+                this.assets = {
+                    crow: new Image(),
+                    bird: new Image(),
+                    banana: new Image(),
+                    cloud1: new Image(),
+                    cloud2: new Image(),
+                    meteorite: new Image()
+                };
+                
+                this.assets.crow.src = 'https://i.imgur.com/TdVc7OM.jpg';
+                this.assets.bird.src = 'https://i.imgur.com/OjHmClD.gif'; // 新しい鳥GIF (550x480)
+                this.assets.banana.src = 'https://i.imgur.com/n4B27qz.jpg';
+                this.assets.cloud1.src = 'https://i.imgur.com/qY1JVuT.jpg';
+                this.assets.cloud2.src = 'https://i.imgur.com/0ybVRKX.jpg';
+                this.assets.meteorite.src = 'https://i.imgur.com/qHUcJgE.gif'; // 新しい隕石GIF (450x460)
+                
+                // GIFアニメーション確認用ログ
+                this.assets.bird.onload = () => {
+                    console.log('🐦 鳥GIF読み込み完了');
+                };
+                this.assets.meteorite.onload = () => {
+                    console.log('☄️ 隕石GIF読み込み完了');
+                };
+            }
+
+            loadAudio() {
+                // 音声ファイルの読み込み（絶対パス使用）
+                const audioBase = window.location.origin + '/audio/';
+                this.audio = {
+                    title: new Audio(audioBase + 'title.wav'),
+                    soda: new Audio(audioBase + 'soda.wav'),
+                    ohno: new Audio(audioBase + 'ohno.wav'),
+                    gamestart: new Audio(audioBase + 'gamestart.wav'),
+                    item: new Audio(audioBase + 'item.wav'),
+                    out: new Audio(audioBase + 'out.wav'),
+                    gameover: new Audio(audioBase + 'gameover.wav'),
+                    bgm: new Audio(audioBase + 'BGM_HURRY.mp3')
+                };
+                
+                console.log('🎵 音声ファイル読み込み開始');
+                document.getElementById('debugLog').textContent = '音声ファイル読み込み中';
+                
+                // BGMをループ設定
+                this.audio.bgm.loop = true;
+                
+                // 音声読み込み状態を追跡
+                this.audioStatus = {};
+                
+                // 音量調整とプリロード
+                Object.entries(this.audio).forEach(([name, audio]) => {
+                    audio.volume = 0.7;
+                    audio.preload = 'auto';
+                    this.audioStatus[name] = 'loading';
+                    
+                    console.log(`🔗 ${name} パス: ${audio.src}`);
+                    
+                    // 読み込み完了ログ
+                    audio.addEventListener('canplaythrough', () => {
+                        console.log(`🎵 音声読み込み完了: ${name}`);
+                        this.audioStatus[name] = 'ready';
+                        document.getElementById('debugLog').textContent = `${name}読み込み完了`;
+                        this.updateAudioDebug();
+                    });
+                    
+                    // エラーログ
+                    audio.addEventListener('error', (e) => {
+                        console.error(`❌ 音声読み込みエラー: ${name}`, e);
+                        console.error(`❌ ${name} URL: ${audio.src}`);
+                        this.audioStatus[name] = 'error';
+                        document.getElementById('debugLog').textContent = `${name}読み込みエラー`;
+                        document.getElementById('audioFileStatus').textContent = `${name}:エラー`;
+                        this.updateAudioDebug();
+                    });
+                    
+                    // 読み込み開始確認
+                    audio.addEventListener('loadstart', () => {
+                        console.log(`🔄 ${name} 読み込み開始`);
+                        document.getElementById('debugLog').textContent = `${name}読み込み開始`;
+                    });
+                });
+                
+                this.updateAudioDebug();
+            }
+
+            async unlockAudio() {
+                console.log('🔓 unlockAudio() 開始 - 現在の状態:', this.audioUnlocked);
+                
+                if (!this.audioUnlocked) {
+                    try {
+                        // Web Audio APIを使用してコンテキストを作成・開始
+                        if (!this.audioContext) {
+                            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                            console.log('AudioContext作成:', this.audioContext.state);
+                        }
+                        
+                        // コンテキストがsuspendedの場合はresume
+                        if (this.audioContext.state === 'suspended') {
+                            await this.audioContext.resume();
+                            console.log('AudioContext resume完了:', this.audioContext.state);
+                        }
+                        
+                        // 全音声ファイルを並列で高速解放
+                        if (this.audio) {
+                            const unlockPromises = Object.entries(this.audio).map(async ([name, audio]) => {
+                                try {
+                                    const originalVolume = audio.volume;
+                                    audio.volume = 0.001; // 極小音量
+                                    
+                                    const playPromise = audio.play();
+                                    if (playPromise) {
+                                        return playPromise.then(() => {
+                                            audio.pause();
+                                            audio.currentTime = 0;
+                                            audio.volume = originalVolume;
+                                            console.log(`✅ ${name} unlock成功`);
+                                        }).catch(e => {
+                                            audio.volume = originalVolume;
+                                            console.log(`⚠️ ${name} unlock失敗:`, e.message);
+                                        });
+                                    }
+                                } catch (e) {
+                                    console.log(`⚠️ ${name} 処理エラー:`, e.message);
+                                }
+                            });
+                            
+                            // 全音声の解放を並列で実行（高速化）
+                            await Promise.allSettled(unlockPromises);
+                        }
+                        
+                        this.audioUnlocked = true;
+                        console.log('🔓 音声コンテキスト解放完了');
+                        
+                    } catch (error) {
+                        console.error('音声解放エラー:', error);
+                    }
+                } else {
+                    console.log('🔓 音声は既に解放済み');
+                }
+            }
+
+            playAudio(audioName) {
+                try {
+                    console.log(`🎵 playAudio(${audioName}) 呼び出し - audioUnlocked: ${this.audioUnlocked}`);
+                    document.getElementById('debugLog').textContent = `playAudio(${audioName})`;
+                    document.getElementById('audioStatus').textContent = this.audioUnlocked ? '解放済み' : '未解放';
+                    
+                    if (!this.audioUnlocked) {
+                        console.log('🔒 音声がまだ解放されていません');
+                        document.getElementById('debugLog').textContent = `音声未解放 ${audioName}`;
+                        return;
+                    }
+                    
+                    if (this.audio[audioName]) {
+                        const audio = this.audio[audioName];
+                        document.getElementById('audioFileStatus').textContent = `${audioName}:${audio.readyState}`;
+                        
+                        // 音声ファイルの状態を確認
+                        if (audio.readyState < 3) { // HAVE_FUTURE_DATA未満
+                            document.getElementById('debugLog').textContent = `${audioName}未読込(${audio.readyState})`;
+                            return;
+                        }
+                        
+                        // 強制的にaudio要素をリセット
+                        audio.pause();
+                        audio.currentTime = 0;
+                        
+                        // muted属性を使って強制的に再生を試行
+                        audio.muted = false;
+                        
+                        const playPromise = audio.play();
+                        
+                        if (playPromise !== undefined) {
+                            playPromise.then(() => {
+                                console.log(`🎵 音声再生成功: ${audioName}`);
+                                document.getElementById('debugLog').textContent = `${audioName}再生成功`;
+                            }).catch(error => {
+                                console.error(`🔇 音声再生失敗: ${audioName}`, error);
+                                document.getElementById('debugLog').textContent = `${audioName}再生失敗:${error.message}`;
+                                
+                                // 最後の手段：ユーザーに直接操作を求める
+                                this.forceAudioPlay(audioName);
+                            });
+                        } else {
+                            // 古いブラウザの場合
+                            setTimeout(() => {
+                                if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
+                                    console.log(`🎵 音声再生成功 (古いブラウザ): ${audioName}`);
+                                } else {
+                                    console.log(`🔇 音声再生失敗 (古いブラウザ): ${audioName}`);
+                                }
+                            }, 100);
+                        }
+                    } else {
+                        console.error(`❌ 音声ファイルが見つかりません: ${audioName}`);
+                        document.getElementById('debugLog').textContent = `${audioName}ファイル不在`;
+                        document.getElementById('audioFileStatus').textContent = `${audioName}:なし`;
+                    }
+                } catch (error) {
+                    console.error('音声再生エラー:', audioName, error);
+                }
+            }
+            
+            forceAudioPlay(audioName) {
+                // フォールバック: 次のタップで音声再生を試行
+                const tapHandler = () => {
+                    if (this.audio[audioName]) {
+                        this.audio[audioName].currentTime = 0;
+                        this.audio[audioName].play().then(() => {
+                            console.log(`🎵 タップ後音声再生成功: ${audioName}`);
+                        }).catch(e => {
+                            console.log(`🔇 タップ後も再生失敗: ${audioName}`, e);
+                        });
+                    }
+                    
+                    // イベントリスナーを削除
+                    document.removeEventListener('touchstart', tapHandler, { once: true });
+                    document.removeEventListener('click', tapHandler, { once: true });
+                };
+                
+                // ワンタップで音声再生
+                document.addEventListener('touchstart', tapHandler, { once: true });
+                document.addEventListener('click', tapHandler, { once: true });
+            }
+
+            stopAudio(audioName) {
+                try {
+                    if (this.audio[audioName]) {
+                        this.audio[audioName].pause();
+                        this.audio[audioName].currentTime = 0;
+                    }
+                } catch (error) {
+                    console.log('音声停止エラー:', error);
+                }
+            }
+
+            startIntro() {
+                document.getElementById('titleScreen').style.display = 'none';
+                document.getElementById('introScreen').style.display = 'block';
+                
+                // ジャイロキャリブレーション開始のメッセージ
+                if (!this.touchControls && !this.isCalibrated) {
+                    console.log('📱 ジャイロセンサーキャリブレーション開始: スマートフォンを自然な角度で持ってください（3秒間）');
+                }
+                
+                // ソーダおじさんの要素を確認してデバッグ
+                const soda = document.getElementById('sodaOjisan');
+                console.log('ソーダおじさん要素:', soda);
+                if (soda) {
+                    console.log('ソーダおじさんのスタイル:', window.getComputedStyle(soda).backgroundImage);
+                }
+                
+                // 0.5秒後にソーダおじさん登場
+                setTimeout(() => {
+                    if (soda) {
+                        soda.classList.add('soda-entrance');
+                        console.log('ソーダおじさんアニメーション開始');
+                    } else {
+                        console.error('ソーダおじさん要素が見つかりません');
+                    }
+                    this.playAudio('soda'); // ソーダおじさん登場音
+                    
+                    // 1.5秒後（ソーダおじさんが上がりきった時）に画面揺れ
+                    setTimeout(() => {
+                        const container = document.getElementById('gameContainer');
+                        container.classList.add('shake');
+                        
+                        // 揺れ終了後にクラス削除
+                        setTimeout(() => {
+                            container.classList.remove('shake');
+                        }, 500);
+                        
+                        // 揺れと同時にくもりん飛び出し開始
+                        const kumorin = document.getElementById('kumorinIntro');
+                        kumorin.classList.add('kumorin-flyout');
+                        this.playAudio('ohno'); // くもりん飛ばされる音
+                        
+                        // 1.0秒後（くもりんが飛んでいく途中）にソーダおじさん下降開始
+                        setTimeout(() => {
+                            if (soda) {
+                                soda.classList.add('soda-exit');
+                                console.log('ソーダおじさん下降アニメーション開始');
+                            }
+                        }, 1000);
+                        
+                        // 2.5秒後にゲーム開始（全アニメーション完了後）
+                        setTimeout(() => {
+                            this.startGame();
+                        }, 2500);
+                    }, 1500);
+                }, 500);
+            }
+
+            startGame() {
+                document.getElementById('introScreen').style.display = 'none';
+                document.getElementById('gameScreen').style.display = 'block';
+                document.getElementById('gameOverScreen').style.display = 'none';
+                
+                // くもりんを確実に表示
+                const kumorin = document.getElementById('kumorinPlayer');
+                if (kumorin) {
+                    kumorin.style.display = 'block';
+                    kumorin.classList.remove('kumorin-death');
+                }
+                
+                this.gameState = 'playing';
+                this.distance = 0;
+                this.bananaCount = 0;
+                this.speedMultiplier = 1.0;
+                
+                // プレイヤー初期位置（画面中央）
+                this.player.x = 540 - this.player.width / 2; // 1080 / 2 - 300 / 2 = 390
+                this.player.y = 960 - this.player.height / 2; // 1920 / 2 - 300 / 2 = 810（画面中央）
+                this.updatePlayerPosition();
+                
+                // 配列クリア
+                this.obstacles = [];
+                this.clouds = [];
+                this.bananas = [];
+                this.stars = [];
+                
+                // HTML要素障害物をクリア
+                this.obstacleElements.forEach(obstacle => {
+                    obstacle.element.remove();
+                });
+                this.obstacleElements = [];
+                
+                // スピードガイドを初期状態に戻す
+                const speedGuide = document.getElementById('speedGuide');
+                if (speedGuide) {
+                    speedGuide.style.color = '#ffff00';
+                    speedGuide.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
+                    speedGuide.style.fontSize = '28px';
+                }
+                
+                // ゲーム開始音とBGM（デバッグログ付き）
+                console.log('🎮 ゲーム開始 - 音声状態チェック:', this.audioUnlocked);
+                this.playAudio('gamestart');
+                this.playAudio('bgm');
+                
+                this.gameLoop();
+            }
+
+            gameLoop() {
+                try {
+                    if (this.gameState !== 'playing') return;
+                    
+                    this.update();
+                    this.draw();
+                    
+                    setTimeout(() => {
+                        this.gameLoop();
+                    }, 16); // 60FPS
+                } catch (error) {
+                    console.error('ゲームループエラー:', error);
+                    // エラーが発生してもゲームを継続
+                    setTimeout(() => {
+                        this.gameLoop();
+                    }, 16);
+                }
+            }
+
+            update() {
+                // プレイヤー移動（ジャイロ）
+                this.updatePlayerMovement();
+                
+                // 距離更新（60FPSに合わせて調整）
+                this.distance += this.speedMultiplier * 1.67; // 60FPSで30秒100m
+                document.getElementById('distanceDisplay').textContent = Math.floor(this.distance) + 'm';
+                
+                // 障害物・アイテム生成
+                this.spawnObjects();
+                
+                // オブジェクト更新
+                this.updateObjects();
+                
+                // 衝突判定
+                this.checkCollisions();
+                
+                // バナナカウンター更新
+                this.updateBananaCounter();
+            }
+
+            updatePlayerMovement() {
+                const baseSpeed = 12; // 15から12に調整（滑らかな操作感）
+                const moveSpeed = baseSpeed * this.speedMultiplier; // スピードアップ適用
+                
+                // デバッグ: スピード情報をコンソールに表示
+                if (this.debugMode && Math.random() < 0.01) { // 1%の確率で表示（頻度制御）
+                    console.log(`現在速度: baseSpeed=${baseSpeed}, multiplier=${this.speedMultiplier}, moveSpeed=${moveSpeed}`);
+                }
+                let shouldMoveLeft = false;
+                let shouldMoveRight = false;
+                let shouldMoveUp = false;
+                let shouldMoveDown = false;
+                
+                // 仮想ジョイスティック操作の確認
+                if (this.touchControls && this.virtualJoystick && this.virtualJoystick.active) {
+                    const sensitivity = 10; // ジョイスティックの感度
+                    
+                    shouldMoveLeft = this.virtualJoystick.currentX < -sensitivity;
+                    shouldMoveRight = this.virtualJoystick.currentX > sensitivity;
+                    shouldMoveUp = this.virtualJoystick.currentY < -sensitivity;
+                    shouldMoveDown = this.virtualJoystick.currentY > sensitivity;
+                    
+                    if (this.debugMode) {
+                        document.getElementById('controlStatus').textContent = `ジョイスティック: X${this.virtualJoystick.currentX.toFixed(1)} Y${this.virtualJoystick.currentY.toFixed(1)}`;
+                    }
+                }
+                // 従来のタッチ操作の確認（4方向対応）
+                else if (this.touchControls && this.touchDirection) {
+                    shouldMoveLeft = this.touchDirection === 'left';
+                    shouldMoveRight = this.touchDirection === 'right';
+                    shouldMoveUp = this.touchDirection === 'up';
+                    shouldMoveDown = this.touchDirection === 'down';
+                    
+                    if (this.debugMode) {
+                        document.getElementById('controlStatus').textContent = `タッチ: ${this.touchDirection}`;
+                    }
+                }
+                // ジャイロセンサーの確認（4方向対応、キャリブレーション済み）
+                else if (this.gyroData && this.isCalibrated) {
+                    const alpha = this.gyroData.alpha || 0;
+                    const beta = this.gyroData.beta || 0;
+                    const gamma = this.gyroData.gamma || 0;
+                    
+                    // 基準角度からの相対的な傾きを計算
+                    const relativeBeta = beta - this.gyroBaseline.beta;
+                    const relativeGamma = gamma - this.gyroBaseline.gamma;
+                    
+                    // 感度を左右と上下で別々に調整（滑らかな操作感）
+                    const gammaSensitivity = 8; // 左右の感度（10→8に変更）
+                    const betaSensitivityUp = 15; // 上移動の感度（18→15に変更）
+                    const betaSensitivityDown = 12; // 下移動の感度（8→12に変更）
+                    
+                    // 左右移動（Gamma値: 左右の傾き）
+                    if (relativeGamma < -gammaSensitivity) {
+                        shouldMoveLeft = true;
+                    } else if (relativeGamma > gammaSensitivity) {
+                        shouldMoveRight = true;
+                    }
+                    
+                    // 上下移動（Beta値: 前後の傾き、非対称な感度）
+                    if (relativeBeta < -betaSensitivityUp) {
+                        shouldMoveUp = true;
+                    } else if (relativeBeta > betaSensitivityDown) {
+                        shouldMoveDown = true;
+                    }
+                    
+                    // デバッグ表示
+                    if (this.debugMode) {
+                        let status = '待機中';
+                        if (shouldMoveLeft) status = '← 左移動';
+                        if (shouldMoveRight) status = '→ 右移動';
+                        if (shouldMoveUp) status = '↑ 上移動';
+                        if (shouldMoveDown) status = '↓ 下移動';
+                        
+                        // 複数方向の場合
+                        if ((shouldMoveLeft || shouldMoveRight) && (shouldMoveUp || shouldMoveDown)) {
+                            const horizontal = shouldMoveLeft ? '←' : '→';
+                            const vertical = shouldMoveUp ? '↑' : '↓';
+                            status = `${horizontal}${vertical} 斜め移動`;
+                        }
+                        
+                        document.getElementById('controlStatus').textContent = 
+                            `${status} (相対B:${relativeBeta}[上${betaSensitivityUp}/下${betaSensitivityDown}], G:${relativeGamma}[${gammaSensitivity}])`;
+                    }
+                }
+                
+                // 移動実行
+                let didMove = false;
+                if (shouldMoveLeft) {
+                    this.player.x -= moveSpeed;
+                    didMove = true;
+                }
+                if (shouldMoveRight) {
+                    this.player.x += moveSpeed;
+                    didMove = true;
+                }
+                if (shouldMoveUp) {
+                    this.player.y -= moveSpeed;
+                    didMove = true;
+                }
+                if (shouldMoveDown) {
+                    this.player.y += moveSpeed;
+                    didMove = true;
+                }
+                
+                // デバッグ: 移動時のみスピード情報表示（頻度制御）
+                if (didMove && this.debugMode && Math.random() < 0.005) {
+                    console.log(`移動速度: ${moveSpeed} (ベース:${15} × 倍率:${this.speedMultiplier})`);
+                }
+                
+                // 画面内制限（左右）- 左右対称に設定
+                const leftMargin = 20;  // 左端マージン（20px）
+                const rightMargin = 20; // 右端マージン（20px）
+                
+                if (this.player.x < leftMargin) {
+                    this.player.x = leftMargin;
+                }
+                if (this.player.x + this.player.width > 1080 - rightMargin) {
+                    this.player.x = 1080 - this.player.width - rightMargin;
+                }
+                
+                // デバッグ用：制限範囲をコンソールに出力（低頻度）
+                if (this.debugMode && Math.random() < 0.001) {
+                    console.log(`🎯 移動可能範囲: ${leftMargin} ≤ x ≤ ${1080 - this.player.width - rightMargin} (プレイヤー位置: ${this.player.x.toFixed(1)})`);
+                }
+                
+                // 画面内制限（上下）
+                if (this.player.y < 200) this.player.y = 200; // 上端制限
+                if (this.player.y > 1920 - this.player.height - 100) {
+                    this.player.y = 1920 - this.player.height - 100; // 下端制限
+                }
+                
+                // HTML要素の位置更新
+                this.updatePlayerPosition();
+            }
+
+            updatePlayerPosition() {
+                if (this.player.element) {
+                    this.player.element.style.left = (this.player.x * this.scaleX) + 'px';
+                    this.player.element.style.top = (this.player.y * this.scaleY) + 'px';
+                    this.player.element.style.width = (this.player.width * this.scaleX) + 'px';
+                    this.player.element.style.height = (this.player.height * this.scaleY) + 'px';
+                }
+            }
+
+            spawnObjects() {
+                // 雲の生成（距離に応じて減少）
+                let cloudChance = 0.1;
+                if (this.distance > 5000) {
+                    // 5000m以降雲生成を減少
+                    cloudChance = 0.1 * Math.max(0, 1 - (this.distance - 5000) / 5000);
+                }
+                
+                if (this.distance < 10000 && Math.random() < cloudChance) {
+                    this.clouds.push({
+                        x: Math.random() * 1080,
+                        y: -200,
+                        type: Math.random() < 0.5 ? 'cloud1' : 'cloud2',
+                        speed: 5 * this.speedMultiplier
+                    });
+                }
+                
+                // 宇宙空間での星生成（10000m以降）
+                if (this.distance >= 10000 && Math.random() < 0.3) {
+                    this.stars.push({
+                        x: Math.random() * 1080,
+                        y: -10,
+                        size: Math.random() * 2 + 1, // 1-3pxの星
+                        opacity: Math.random() * 0.8 + 0.2, // 0.2-1.0の透明度
+                        twinkleSpeed: Math.random() * 0.05 + 0.01, // 点滅速度
+                        twinklePhase: Math.random() * Math.PI * 2, // 点滅位相
+                        speed: 2 * this.speedMultiplier
+                    });
+                }
+                
+                // 障害物生成システム（距離に応じて鳥から隕石に変化）
+                const distanceCheck = Math.floor(this.distance / 100);
+                
+                // 鳥の生成確率（5000m以降急激に減少）
+                let birdChance = 0.008; // 基本0.8%
+                if (this.distance >= 1000) birdChance = 0.012; // 1000m以降: 1.2%
+                if (this.distance >= 3000) birdChance = 0.018; // 3000m以降: 1.8%
+                if (this.distance >= 5000) {
+                    // 5000m以降急激に減少
+                    const reduction = Math.min((this.distance - 5000) / 3000, 0.9); // 8000mで90%減少
+                    birdChance = 0.025 * (1 - reduction);
+                }
+                
+                // 隕石の生成確率（8000m以降徐々に登場）
+                let meteoriteChance = 0;
+                if (this.distance >= 8000) {
+                    // 8000m以降徐々に登場、12000mで最大に
+                    const meteoriteProgress = Math.min((this.distance - 8000) / 4000, 1); // 12000mで1.0
+                    meteoriteChance = 0.035 * meteoriteProgress; // 最大3.5%
+                }
+                
+                // 鳥の生成
+                if (Math.random() < birdChance) {
+                    const direction = Math.random() < 0.5 ? 'left' : 'right';
+                    const startX = direction === 'left' ? -300 : 1380;
+                    const y = Math.random() * 1400 + 300; // 300〜1700の範囲（画面下部も含む）
+                    
+                    let birdSpeed = 5;
+                    if (this.distance >= 5000) birdSpeed = 6;
+                    if (this.distance >= 10000) birdSpeed = 7;
+                    
+                    this.createObstacleElement('bird', startX, y, 180, 156, direction, birdSpeed * this.speedMultiplier);
+                }
+                
+                // 隕石の生成
+                if (Math.random() < meteoriteChance) {
+                    // 隕石は上から垂直に落下
+                    const x = Math.random() * (1080 - 140); // 140pxサイズを考慮
+                    const y = -200;
+                    
+                    // 隕石の速度は鳥の1.5倍
+                    let meteoriteSpeed = 7.5; // 基本速度 5 × 1.5 = 7.5
+                    if (this.distance >= 10000) meteoriteSpeed = 10.5; // 7 × 1.5 = 10.5
+                    
+                    this.createObstacleElement('meteorite', x, y, 140, 143, 'down', meteoriteSpeed * this.speedMultiplier);
+                    
+                    if (this.debugMode) {
+                        console.log(`隕石生成: x=${x}, speed=${meteoriteSpeed * this.speedMultiplier}`);
+                    }
+                }
+                
+                // デバッグログ（低頻度）
+                if (this.debugMode && Math.random() < 0.001) {
+                    console.log(`距離: ${Math.floor(this.distance)}m, 鳥確率: ${(birdChance * 100).toFixed(2)}%, 隕石確率: ${(meteoriteChance * 100).toFixed(2)}%`);
+                }
+                
+                // バナナ生成（距離に応じて確率調整）
+                let bananaChance = 0.4; // 基本40%
+                if (this.distance >= 10000) {
+                    bananaChance = 0.3; // 高難易度ではバナナを少なく
+                }
+                
+                if (Math.floor(this.distance) % 100 === 0 && Math.random() < bananaChance) {
+                    this.bananas.push({
+                        x: Math.random() * (1080 - 210), // 1080 - 210 = 870（30%縮小後のサイズ）
+                        y: -300,
+                        width: 210, // 適度なサイズ
+                        height: 130, // 正しいアスペクト比 1041:642 ≈ 1.62:1
+                        speed: 3 * this.speedMultiplier
+                    });
+                }
+            }
+
+            updateObjects() {
+                // 雲の更新
+                this.clouds = this.clouds.filter(cloud => {
+                    cloud.y += cloud.speed;
+                    return cloud.y < 1920 + 200; // 1920 + 200 = 2120
+                });
+                
+                // HTML要素障害物の更新
+                this.obstacleElements = this.obstacleElements.filter(obstacle => {
+                    if (obstacle.type === 'bird') {
+                        // 鳥の左右移動
+                        if (obstacle.direction === 'left') {
+                            obstacle.x += obstacle.speed;
+                        } else {
+                            obstacle.x -= obstacle.speed;
+                        }
+                        obstacle.element.style.left = (obstacle.x * this.scaleX) + 'px';
+                        
+                        if (obstacle.x < -400 || obstacle.x > 1080 + 400) {
+                            obstacle.element.remove();
+                            return false;
+                        }
+                    } else if (obstacle.type === 'meteorite') {
+                        // 隕石の垂直落下
+                        obstacle.y += obstacle.speed;
+                        obstacle.element.style.top = (obstacle.y * this.scaleY) + 'px';
+                        
+                        if (obstacle.y > 1920 + 200) {
+                            obstacle.element.remove();
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+                
+                // バナナの更新
+                this.bananas = this.bananas.filter(banana => {
+                    banana.y += banana.speed;
+                    return banana.y < 1920 + 300; // 1920 + 300 = 2220
+                });
+                
+                // 星々の更新（点滅エフェクト付き）
+                this.stars = this.stars.filter(star => {
+                    star.y += star.speed;
+                    
+                    // 点滅エフェクト
+                    star.twinklePhase += star.twinkleSpeed;
+                    star.opacity = 0.5 + 0.5 * Math.sin(star.twinklePhase);
+                    
+                    return star.y < 1920 + 20;
+                });
+            }
+
+            checkCollisions() {
+                // HTML要素障害物との衝突
+                for (let obstacle of this.obstacleElements) {
+                    if (this.isColliding(this.player, obstacle)) {
+                        this.gameOver();
+                        return;
+                    }
+                }
+                
+                // バナナとの衝突
+                this.bananas = this.bananas.filter(banana => {
+                    if (this.isColliding(this.player, banana)) {
+                        this.collectBanana();
+                        return false;
+                    }
+                    return true;
+                });
+            }
+
+            isColliding(obj1, obj2) {
+                // 当たり判定を小さくする（画像の70%程度）
+                const margin1 = 40; // obj1（プレイヤー）のマージン
+                const margin2 = 30; // obj2（障害物）のマージン
+                
+                return (obj1.x + margin1) < (obj2.x + obj2.width - margin2) &&
+                       (obj1.x + obj1.width - margin1) > (obj2.x + margin2) &&
+                       (obj1.y + margin1) < (obj2.y + obj2.height - margin2) &&
+                       (obj1.y + obj1.height - margin1) > (obj2.y + margin2);
+            }
+
+            collectBanana() {
+                this.bananaCount++;
+                
+                // スピードアップ段階（0個:1.0倍, 1個:1.4倍, 2個:1.8倍, 3個:2.2倍, 4個:2.6倍, 5個以上:3.0倍）
+                const speedLevels = [1.0, 1.4, 1.8, 2.2, 2.6, 3.0];
+                const speedIndex = Math.min(this.bananaCount, speedLevels.length - 1);
+                this.speedMultiplier = speedLevels[speedIndex];
+                
+                console.log(`🍌 バナナ取得! カウント: ${this.bananaCount}, スピード倍率: ×${this.speedMultiplier}`);
+                console.log(`⬆️ スピードアップ! 現在の移動速度: ${15 * this.speedMultiplier} (ベース:15 × ${this.speedMultiplier})`);
+                
+                // バナナ取得音
+                this.playAudio('item');
+                
+                // スピードアップの視覚的フィードバック（5個まで）
+                if (this.bananaCount <= 5) {
+                    this.showSpeedUpEffect();
+                }
+            }
+
+            updateBananaCounter() {
+                // スピードガイド表示更新
+                const speedGuide = document.getElementById('speedGuide');
+                if (speedGuide) {
+                    if (this.bananaCount === 0) {
+                        // バナナ0個：ガイド表示
+                        speedGuide.innerHTML = '<div class="banana-inline"></div>でスピードアップ！';
+                    } else if (this.bananaCount < 5) {
+                        // バナナ1-4個：LV表示
+                        speedGuide.innerHTML = `LV${this.bananaCount}`;
+                    } else {
+                        // バナナ5個以上：MAX表示
+                        speedGuide.innerHTML = 'MAX';
+                        speedGuide.style.color = '#ff0000'; // 赤色で強調
+                        speedGuide.style.textShadow = '0 0 10px #ffff00'; // 光らせる
+                    }
+                }
+                
+                // デバッグ表示更新（常に更新）
+                const speedStatus = document.getElementById('speedStatus');
+                const bananaStatus = document.getElementById('bananaStatus');
+                if (speedStatus) speedStatus.textContent = `×${this.speedMultiplier.toFixed(1)}`;
+                if (bananaStatus) bananaStatus.textContent = `${this.bananaCount}個`;
+            }
+
+            draw() {
+                // キャンバスクリア
+                this.ctx.clearRect(0, 0, this.screenWidth, this.screenHeight);
+                
+                // スケーリング適用
+                this.ctx.save();
+                this.ctx.scale(this.scaleX, this.scaleY);
+                
+                // 距離に応じた背景変化
+                this.drawBackground();
+                
+                // 距離に応じた環境オブジェクト描画
+                this.drawEnvironment();
+                
+                
+                // プレイヤー描画はHTML要素で行うため、ここでは描画しない
+                
+                // 障害物はHTML要素で描画するため、ここでは何もしない
+                
+                // バナナ描画
+                this.bananas.forEach(banana => {
+                    this.ctx.drawImage(
+                        this.assets.banana,
+                        banana.x, banana.y,
+                        banana.width, banana.height
+                    );
+                });
+                
+                // スケーリング復元
+                this.ctx.restore();
+            }
+
+            createObstacleElement(type, x, y, width, height, direction, speed) {
+                const element = document.createElement('div');
+                element.style.position = 'absolute';
+                element.style.left = (x * this.scaleX) + 'px';
+                element.style.top = (y * this.scaleY) + 'px';
+                element.style.width = (width * this.scaleX) + 'px';
+                element.style.height = (height * this.scaleY) + 'px';
+                element.style.zIndex = '4';
+                element.style.pointerEvents = 'none';
+                
+                if (type === 'bird') {
+                    // 方向に応じて異なるGIFを使用
+                    if (direction === 'left') {
+                        // 左から右へ移動（右向きの鳥）
+                        element.style.backgroundImage = "url('https://i.imgur.com/OjHmClD.gif')";
+                    } else {
+                        // 右から左へ移動（左向きの鳥）
+                        element.style.backgroundImage = "url('https://i.imgur.com/HpSqxQ3.gif')";
+                    }
+                } else if (type === 'meteorite') {
+                    element.style.backgroundImage = "url('https://i.imgur.com/qHUcJgE.gif')";
+                }
+                
+                element.style.backgroundSize = 'contain';
+                element.style.backgroundRepeat = 'no-repeat';
+                element.style.backgroundPosition = 'center';
+                
+                document.getElementById('gameScreen').appendChild(element);
+                
+                this.obstacleElements.push({
+                    element: element,
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height,
+                    type: type,
+                    direction: direction,
+                    speed: speed
+                });
+            }
+
+            drawBackground() {
+                const distance = this.distance;
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, 1920);
+                
+                if (distance < 5000) {
+                    // 0-5000m: 通常の空色
+                    gradient.addColorStop(0, '#87CEEB');
+                    gradient.addColorStop(1, '#98FB98');
+                } else if (distance < 10000) {
+                    // 5000-10000m: 段階的に紺色へ変化
+                    const progress = (distance - 5000) / 5000; // 0から1の進行度
+                    
+                    // 上部：水色から紺色へ
+                    const topR = Math.floor(135 - (135 - 25) * progress);  // 87CEEB → 192545
+                    const topG = Math.floor(206 - (206 - 37) * progress);
+                    const topB = Math.floor(235 - (235 - 69) * progress);
+                    
+                    // 下部：薄緑から深い青紫へ
+                    const bottomR = Math.floor(152 - (152 - 13) * progress); // 98FB98 → 0D1B3D
+                    const bottomG = Math.floor(251 - (251 - 27) * progress);
+                    const bottomB = Math.floor(152 - (152 - 61) * progress);
+                    
+                    gradient.addColorStop(0, `rgb(${topR}, ${topG}, ${topB})`);
+                    gradient.addColorStop(1, `rgb(${bottomR}, ${bottomG}, ${bottomB})`);
+                } else {
+                    // 10000m以降: 宇宙空間（深い紺色）
+                    gradient.addColorStop(0, '#192545'); 
+                    gradient.addColorStop(1, '#0D1B3D');
+                }
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, 1080, 1920);
+            }
+
+            drawEnvironment() {
+                const distance = this.distance;
+                
+                if (distance < 10000) {
+                    // 10000m未満: 雲を描画（距離に応じて透明度減少）
+                    let cloudOpacity = 0.7;
+                    if (distance > 5000) {
+                        // 5000m以降雲を徐々に薄く
+                        cloudOpacity = 0.7 * (1 - (distance - 5000) / 5000);
+                    }
+                    
+                    this.clouds.forEach(cloud => {
+                        this.ctx.globalAlpha = cloudOpacity;
+                        this.ctx.drawImage(
+                            this.assets[cloud.type],
+                            cloud.x, cloud.y, 400, 200
+                        );
+                    });
+                    this.ctx.globalAlpha = 1.0;
+                } else {
+                    // 10000m以降: 星々を描画
+                    this.stars.forEach(star => {
+                        this.ctx.globalAlpha = star.opacity;
+                        this.ctx.fillStyle = '#FFFFFF';
+                        this.ctx.beginPath();
+                        this.ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    });
+                    this.ctx.globalAlpha = 1.0;
+                }
+            }
+
+            gameOver() {
+                this.gameState = 'gameOver';
+                
+                // BGM停止と効果音再生
+                this.stopAudio('bgm');
+                this.playAudio('out');
+                
+                // 画面揺れとくもりん回転落下の同時実行
+                const container = document.getElementById('gameContainer');
+                const kumorin = document.getElementById('kumorinPlayer');
+                
+                // 画面揺れ開始
+                container.classList.add('shake');
+                
+                // くもりん回転落下開始と非表示化
+                if (kumorin) {
+                    kumorin.classList.add('kumorin-death');
+                    // アニメーション完了後にくもりんを完全に非表示
+                    setTimeout(() => {
+                        kumorin.style.display = 'none';
+                    }, 1000);
+                }
+                
+                // アニメーション終了後にリザルト画面表示
+                setTimeout(() => {
+                    // 揺れクラス削除
+                    container.classList.remove('shake');
+                    
+                    // ゲームオーバー音再生
+                    this.playAudio('gameover');
+                    
+                    // リザルト表示
+                    document.getElementById('finalDistance').textContent = Math.floor(this.distance) + 'm';
+                    document.getElementById('finalBananas').textContent = this.bananaCount;
+                    document.getElementById('gameOverScreen').style.display = 'flex';
+                    
+                    // くもりんの死亡アニメーションクラス削除（次回リセット用）
+                    if (kumorin) {
+                        kumorin.classList.remove('kumorin-death');
+                    }
+                }, 1000); // 1秒後（アニメーション完了後）
+            }
+
+            shareScore() {
+                const text = `「くもりんとばし」でくもりんは${Math.floor(this.distance)}mとんでった！バナナは${this.bananaCount}本ゲットしたよ！あなたはどこまで飛べる？ #くもりんとばし #サンサンキッズTV`;
+                const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+                window.open(url, '_blank');
+            }
+
+            showTitleScreen() {
+                document.getElementById('gameScreen').style.display = 'none';
+                document.getElementById('gameOverScreen').style.display = 'none';
+                document.getElementById('gyroPermissionScreen').style.display = 'none';
+                document.getElementById('gyroTutorialScreen').style.display = 'none';
+                document.getElementById('titleScreen').style.display = 'flex';
+                this.gameState = 'title';
+                
+                // 導入シーンの要素とアニメーション状態をリセット
+                this.resetIntroScene();
+            }
+
+            resetIntroScene() {
+                // ソーダおじさんとくもりんの状態をリセット
+                const soda = document.getElementById('sodaOjisan');
+                const kumorinIntro = document.getElementById('kumorinIntro');
+                const kumorinPlayer = document.getElementById('kumorinPlayer');
+                const container = document.getElementById('gameContainer');
+                
+                if (soda) {
+                    soda.classList.remove('soda-entrance', 'soda-exit');
+                    console.log('ソーダおじさんアニメーションクラスをリセット');
+                }
+                
+                if (kumorinIntro) {
+                    kumorinIntro.classList.remove('kumorin-flyout');
+                    console.log('くもりんイントロアニメーションクラスをリセット');
+                }
+                
+                if (kumorinPlayer) {
+                    kumorinPlayer.classList.remove('kumorin-death');
+                    kumorinPlayer.style.display = 'block'; // 再表示
+                    console.log('くもりん死亡アニメーションクラスをリセット');
+                }
+                
+                if (container) {
+                    container.classList.remove('shake');
+                    console.log('画面揺れクラスをリセット');
+                }
+                
+                // 導入シーンを非表示に
+                document.getElementById('introScreen').style.display = 'none';
+            }
+            
+            showGyroPermissionButton() {
+                console.log('🎯 ジャイロ許可画面を表示');
+                document.getElementById('titleScreen').style.display = 'none';
+                document.getElementById('gyroPermissionScreen').style.display = 'flex';
+            }
+            
+            hideGyroPermissionScreen() {
+                console.log('🎯 ジャイロ許可画面を非表示');
+                document.getElementById('gyroPermissionScreen').style.display = 'none';
+            }
+            
+            showGyroTutorial() {
+                console.log('📱 ジャイロ操作案内を表示');
+                document.getElementById('gyroTutorialScreen').style.display = 'flex';
+                
+                // 29.97fps換算で3秒15フレーム = 約3.5秒間表示
+                const displayDuration = Math.round((3 + 15/29.97) * 1000); // 3.5秒
+                console.log(`⏱️ チュートリアル表示時間: ${displayDuration}ms`);
+                
+                setTimeout(() => {
+                    this.hideGyroTutorial();
+                    this.startIntro();
+                }, displayDuration);
+            }
+            
+            hideGyroTutorial() {
+                console.log('📱 ジャイロ操作案内を非表示');
+                document.getElementById('gyroTutorialScreen').style.display = 'none';
+            }
+            
+            async handleGyroPermissionClick() {
+                console.log('🎯 ユーザージェスチャー内で許可要求を開始');
+                
+                // ジャイロセンサーが使用可能かチェック
+                if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    try {
+                        console.log('📱 DeviceOrientationEvent.requestPermission() 実行中...');
+                        const response = await DeviceOrientationEvent.requestPermission();
+                        console.log('✅ 許可結果:', response);
+                        
+                        if (response === 'granted') {
+                            console.log('🎉 ジャイロセンサー許可取得成功');
+                            this.hideGyroPermissionScreen();
+                            // ジョイスティックを非表示
+                            const joystick = document.getElementById('virtualJoystick');
+                            if (joystick) {
+                                joystick.style.display = 'none';
+                            }
+                            this.setupGyro();
+                            this.showGyroTutorial(); // チュートリアル表示
+                        } else {
+                            console.log('❌ ジャイロセンサー許可拒否:', response);
+                            alert(`センサー許可が拒否されました: ${response}\n\nタップ操作でプレイします。`);
+                            this.hideGyroPermissionScreen();
+                            this.setupTouchControls();
+                            this.startIntro();
+                        }
+                    } catch (error) {
+                        console.error('❌ ジャイロセンサー許可エラー:', error);
+                        alert(`センサー許可エラー: ${error.name}\n${error.message}\n\nタップ操作でプレイします。`);
+                        this.hideGyroPermissionScreen();
+                        this.setupTouchControls();
+                        this.startIntro();
+                    }
+                } else {
+                    // Android等のrequestPermission不要デバイス
+                    console.log('📱 Android等のジャイロ対応デバイス検出');
+                    this.hideGyroPermissionScreen();
+                    // ジョイスティックを非表示
+                    const joystick = document.getElementById('virtualJoystick');
+                    if (joystick) {
+                        joystick.style.display = 'none';
+                    }
+                    this.setupGyro();
+                    this.showGyroTutorial();
+                }
+            }
+            
+            updateAudioDebug() {
+                // デバッグ機能は無効化
+            }
+            
+            showAudioMessage(message) {
+                // デバッグ機能は無効化
+                console.log('Audio:', message);
+            }
+            
+            
+            showSpeedUpEffect() {
+                // スピードアップエフェクトでスピードガイド表示を一時的に大きくする
+                const speedGuide = document.getElementById('speedGuide');
+                if (speedGuide) {
+                    speedGuide.style.fontSize = '42px'; /* 28px × 1.5 = 42px */
+                    speedGuide.style.color = '#ff0000';
+                    speedGuide.style.textShadow = '0 0 10px #ffff00';
+                    
+                    setTimeout(() => {
+                        speedGuide.style.fontSize = '28px';
+                        // MAXの場合は赤色を維持、そうでなければ黄色に戻す
+                        if (this.bananaCount < 5) {
+                            speedGuide.style.color = '#ffff00';
+                            speedGuide.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
+                        }
+                    }, 1000);
+                }
+            }
+
+        }
+
+        // ゲーム開始
+        window.addEventListener('load', () => {
+            const game = new KumorinGame();
+            // タイトル画面表示時に音楽再生
+            game.playAudio('title');
+        });
+    </script>
+</body>
+</html>
