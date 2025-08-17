@@ -442,7 +442,7 @@
             <div id="kumorinGif"></div>
             <button id="startButton">スタート</button>
             <div class="copyright">© 2025 株式会社aquwa. All rights reserved.</div>
-            <div class="version-info">v1.2.1</div>
+            <div class="version-info">v1.3.0</div>
         </div>
 
         <!-- ジャイロ許可画面 -->
@@ -512,9 +512,9 @@
             <div style="font-size: 58px; color: #ffff00; margin: 20px 0;">
                 🍌を<span id="finalBananas">0</span>本ゲットしたよ！
             </div>
-            <button class="button" id="retryButton">もう一度プレイ</button>
+            <button class="button" id="titleButton">タイトルへ戻る</button>
             <button class="button" id="shareButton">結果をシェア</button>
-            <button class="button" id="titleButton">タイトルに戻る</button>
+            <button class="button" id="youtubeButton">YouTubeをみる</button>
         </div>
     </div>
 
@@ -817,28 +817,21 @@
                     }
                 });
 
-                // リトライボタン（タッチとクリック両対応）
-                const retryButton = document.getElementById('retryButton');
-                const handleRetryClick = async () => {
-                    console.log('🔄 リトライボタンクリック');
-                    // 音声解放を確実に実行
-                    await this.unlockAudio();
-                    
-                    // 操作状態をリセット
-                    this.resetControlModes();
-                    
-                    // 操作選択画面に戻る
-                    this.showGyroPermissionButton();
+                // YouTubeボタン（タッチとクリック両対応）
+                const youtubeButton = document.getElementById('youtubeButton');
+                const handleYouTubeClick = () => {
+                    console.log('📺 YouTubeボタンクリック');
+                    window.open('https://www.youtube.com/@sunsunkidstv', '_blank');
                 };
                 
-                retryButton.addEventListener('touchend', (e) => {
+                youtubeButton.addEventListener('touchend', (e) => {
                     e.preventDefault();
-                    handleRetryClick();
+                    handleYouTubeClick();
                 });
                 
-                retryButton.addEventListener('click', (e) => {
+                youtubeButton.addEventListener('click', (e) => {
                     if (!('ontouchstart' in window)) {
-                        handleRetryClick();
+                        handleYouTubeClick();
                     }
                 });
 
